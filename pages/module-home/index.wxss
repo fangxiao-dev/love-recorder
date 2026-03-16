@@ -51,34 +51,6 @@
   align-items: center;
 }
 
-.calendar-actions {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-}
-
-.calendar-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10rpx 18rpx;
-  border-radius: 999rpx;
-  background: #fff4ec;
-  color: #8d5a48;
-  font-size: 22rpx;
-  line-height: 1;
-  border: none;
-}
-
-.calendar-link::after {
-  border: none;
-}
-
-.calendar-link-active {
-  background: #edd1c3;
-  color: #633627;
-}
-
 .mode-switch {
   display: inline-flex;
   padding: 6rpx;
@@ -158,7 +130,7 @@
 .weekday-cell {
   text-align: center;
   font-size: 22rpx;
-  color: #9c7b6b;
+  color: #9c9088;
 }
 
 .calendar-week {
@@ -172,11 +144,18 @@
   position: relative;
   min-height: 112rpx;
   border-radius: 22rpx;
-  background: #f7efe9;
+  background: #f6f3f0;
   padding: 16rpx 0 14rpx;
   text-align: center;
-  color: #6d564a;
+  color: #5f5955;
   box-sizing: border-box;
+}
+
+.anchor-ring {
+  position: absolute;
+  inset: 10rpx;
+  border: 2rpx dashed rgba(59, 38, 29, 0.6);
+  border-radius: 18rpx;
 }
 
 .month-day {
@@ -184,13 +163,14 @@
 }
 
 .calendar-day.is-period {
-  background: #cf7c63;
+  background: #d78469;
   color: #fff8f4;
 }
 
 .calendar-day.is-predicted {
-  background: #fbefe8;
-  box-shadow: inset 0 0 0 2rpx #e6b39c;
+  background: #efe7e1;
+  color: #8e7f74;
+  box-shadow: inset 0 0 0 2rpx rgba(196, 165, 145, 0.55);
 }
 
 .calendar-day.is-period.is-predicted {
@@ -206,11 +186,15 @@
 }
 
 .calendar-day.is-selected-range {
-  background: #edd1c3;
+  background: #e8dad1;
 }
 
 .calendar-day.is-selected-range.is-period {
-  background: #cf7c63;
+  background: #d78469;
+}
+
+.calendar-day.is-selected-range.is-predicted {
+  background: #e6ddd6;
 }
 
 .calendar-day.is-outside-month {
@@ -240,15 +224,18 @@
 }
 
 .day-dot {
-  width: 12rpx;
-  height: 12rpx;
-  margin: 14rpx auto 0;
+  width: 0;
+  height: 0;
+  margin: 16rpx auto 0;
   border-radius: 999rpx;
   background: transparent;
 }
 
 .day-dot-visible {
-  background: currentColor;
+  width: 14rpx;
+  height: 14rpx;
+  background: #d38d7d;
+  box-shadow: 0 0 0 4rpx rgba(211, 141, 125, 0.14);
 }
 
 .timeline-legend {
@@ -272,16 +259,17 @@
   border-radius: 999rpx;
 }
 
-.legend-recorded {
-  background: #d9896f;
+.legend-special {
+  background: #d38d7d;
 }
 
 .legend-period {
-  background: #cf7c63;
+  background: #d78469;
 }
 
 .legend-predicted {
-  border: 2rpx solid #e3b59d;
+  background: #efe7e1;
+  border: 2rpx solid rgba(196, 165, 145, 0.55);
 }
 
 .legend-today {
@@ -329,6 +317,10 @@
   margin-top: 8rpx;
 }
 
+.panel-actions-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .panel-btn {
   border-radius: 18rpx;
   font-size: 26rpx;
@@ -352,32 +344,71 @@
   margin-top: 4rpx;
 }
 
+.state-chip-row {
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+  margin-top: 8rpx;
+}
+
+.state-chip {
+  padding: 12rpx 24rpx;
+  border-radius: 999rpx;
+  background: #fff4ec;
+  color: #7d695e;
+  font-size: 24rpx;
+}
+
+.state-chip-active {
+  background: #3b261d;
+  color: #fff7f2;
+}
+
+.attribute-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16rpx;
+  margin-top: 8rpx;
+}
+
+.attribute-field {
+  padding: 18rpx;
+  border-radius: 18rpx;
+  background: #fcf5f0;
+}
+
+.attribute-field-notes {
+  margin-top: 8rpx;
+}
+
+.attribute-label {
+  font-size: 22rpx;
+  color: #9c7b6b;
+}
+
+.attribute-value {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #3b261d;
+}
+
+.panel-textarea {
+  width: 100%;
+  min-height: 120rpx;
+  margin-top: 12rpx;
+  padding: 16rpx;
+  box-sizing: border-box;
+  border-radius: 16rpx;
+  background: #fff;
+  font-size: 24rpx;
+  color: #3b261d;
+}
+
 .panel-link {
   display: inline-flex;
   align-items: center;
   color: #a45f49;
   font-size: 24rpx;
-}
-
-.quick-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16rpx;
-  margin-top: 24rpx;
-}
-
-.quick-btn {
-  background: #fff7f2;
-  color: #5d4035;
-  border: 2rpx solid rgba(217, 137, 111, 0.22);
-  border-radius: 20rpx;
-  font-size: 28rpx;
-}
-
-.quick-btn-primary {
-  background: #3b261d;
-  color: #fff;
-  border-color: transparent;
 }
 
 .action-row {

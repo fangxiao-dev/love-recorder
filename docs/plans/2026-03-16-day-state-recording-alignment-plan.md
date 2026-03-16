@@ -4,7 +4,7 @@
 
 **Goal:** Align the menstrual module interaction and data model to a day-record source of truth with derived cycles and a 3-week cycle window as the primary editor.
 
-**Architecture:** Keep `day_record` as the only persisted truth for menstrual status, derive cycle blocks from consecutive `period` days, and treat the existing quick actions as shortcuts into the same model. The homepage remains the main editor: tap for single-day editing, long-press for range selection, and month view remains browse-only.
+**Architecture:** Keep `day_record` as the only persisted truth for menstrual status, derive cycle blocks from consecutive `period` days, and collapse editing into one homepage model. The homepage remains the main editor: tap for single-day attribute editing, long-press to enter drag-select/drag-cancel multi-select, and month view remains browse-only.
 
 **Tech Stack:** Native WeChat Mini Program, JavaScript, local storage, deterministic seed data, existing module/shared-space shell
 
@@ -29,9 +29,10 @@ Document exact rules for:
 **Step 2: Write the interaction contract**
 
 Document:
-- tap opens day detail
+- tap opens day detail and attribute editing
 - long press enters multi-select mode
-- save applies `period` to the selected range
+- drag selects or deselects continuous dates based on the long-press start cell state
+- save applies default `period` plus default/normal observations to the selected range
 - month view is browse-only
 
 **Step 3: Add rule examples**
@@ -111,14 +112,16 @@ git commit -m "refactor: adopt day-record source of truth"
 Cover:
 - tap vs long-press separation
 - entering and exiting multi-select mode
-- dragging to select a continuous range
-- saving a range writes default `period` state
+- dragging to select or deselect a continuous range
+- tapping a single cell inside multi-select mode toggles just that day
+- saving a range writes default `period` and default/normal observations
 
 **Step 2: Implement selection mode state**
 
 Add:
 - anchor date
 - selected date list
+- drag mode (`select` / `deselect`) derived from long-press start cell state
 - selection-mode UI state
 - explicit save and cancel paths
 
@@ -132,9 +135,10 @@ When the user saves:
 **Step 4: Keep tap-based single-day editing intact**
 
 Ensure:
-- tap still opens day detail
+- tap still opens day detail and attributes panel
 - tap outside selection mode does not accidentally select dates
 - blank days can still be edited individually
+- tap inside selection mode can toggle a single day as a micro-adjustment
 
 **Step 5: Verify in WeChat DevTools**
 
@@ -151,43 +155,44 @@ git add pages/module-home/index.js pages/module-home/index.wxml pages/module-hom
 git commit -m "feat: add multi-select day range editing"
 ```
 
-### Task 4: Unify quick actions with the day-state model
+### Task 4: Replace quick actions with panel-first recording
 
 **Files:**
 - Modify: `pages/module-home/index.js`
 - Modify: `pages/module-home/index.wxml`
 - Modify: `services/cycle-record-service.js`
-- Test: `tests/services/cycle-record-service.spec.js`
+- Test: `tests/history/cycle-record-service.test.js`
 
-**Step 1: Write failing tests for quick actions**
+**Step 1: Write failing tests for panel-first recording**
 
 Cover:
-- `今天来了` writes `period` for today
-- `今天结束了` only shortens the currently active derived block to today
-- quick actions do not create a second data model
+- single-day `月经正常` writes `period` plus default/normal observations
+- single-day attribute editing does not require an explicit "异常" mode
+- removing the quick actions area does not create a second data model
 
-**Step 2: Implement quick actions as wrappers**
+**Step 2: Implement panel-first recording helpers**
 
 Map:
-- `今天来了` to single-day or range-based day-record creation
-- `今天结束了` to day-record updates that produce the intended derived end boundary
+- single-day "月经正常" to a day-record helper with default observations
+- manual property edits to the same day-record helper family as range save
 
-**Step 3: Remove cycle-first assumptions**
+**Step 3: Remove quick-action-first assumptions**
 
 Ensure the service no longer requires:
 - explicit start/end object creation
-- special-case historical backfill flow separate from regular editing
+- a separate "记录异常" flow before editing attributes
+- a dedicated quick actions area for common recording
 
 **Step 4: Re-run tests**
 
 Run: service tests
-Expected: quick actions pass while using the same day-state model
+Expected: panel-first recording passes while using the same day-state model
 
 **Step 5: Commit**
 
 ```bash
-git add pages/module-home/index.js pages/module-home/index.wxml services/cycle-record-service.js tests/services/cycle-record-service.spec.js
-git commit -m "refactor: unify quick actions with day-state editing"
+git add pages/module-home/index.js pages/module-home/index.wxml services/cycle-record-service.js tests/history/cycle-record-service.test.js
+git commit -m "refactor: adopt panel-first day-state recording"
 ```
 
 ### Task 5: Re-run MVP verification against the new model

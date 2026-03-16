@@ -20,22 +20,28 @@ Phase 1
 - [x] Confirm selected tasks and constraints
 - [x] Confirm the approved day-state rules and homepage interaction contract
 - [x] Record workflow constraints from WT-PM and planning-with-files
-- [ ] Write findings and rationale
-- **Status:** in_progress
+- [x] Write findings and rationale
+- **Status:** completed
 
 ### Phase 2: Planning & Structure
-- [ ] Map current implementation files that still assume cycle-first records
-- [ ] Define migration sequence for model, service, homepage interaction, and QA
-- [ ] Confirm dependencies and risks
-- **Status:** pending
+- [x] Map current implementation files that still assume cycle-first records
+- [x] Define migration sequence for model, service, homepage interaction, and QA
+- [x] Confirm dependencies and risks
+- [x] Re-align the task plan to the revised interaction contract: drag-select/drag-cancel multi-select plus panel-first recording
+- **Status:** completed
 
 ### Phase 3: Implementation
-- [ ] Refactor domain/service layer to day-state source-of-truth
-- [ ] Add long-press multi-select editing in the 3-week cycle window
-- [ ] Preserve tap-based single-day editing and month-view browse-only behavior
-- [ ] Keep quick actions as wrappers over the same editing model
+- [x] Refactor domain/service layer to day-state source-of-truth
+- [x] Replace two-tap range selection with long-press drag-select/drag-cancel multi-select
+- [x] Replace the current selected-day action panel with a panel-first attributes editor
+- [x] Remove the quick actions area and move fast recording into the selected-day panel
+- [x] Add a single-day `月经正常` fast path that writes default/normal observations
+- [x] Rename the non-period extra state to `特殊` and make the day marker represent only that state
+- [x] Support tapping the active state again to clear back to `none`
+- [x] Add lightweight user feedback for future-date operations
+- [x] Preserve month-view browse-only behavior
 - [ ] Keep progress and errors updated
-- **Status:** pending
+- **Status:** in_progress
 
 ### Phase 4: Testing & Verification
 - [ ] Run service/model verification for day-state aggregation behavior
@@ -63,12 +69,14 @@ Phase 1
 ## Acceptance Checks
 1. Missing days resolve to implicit `none`.
 2. Consecutive `period` days render as a single derived cycle block.
-3. Long press enters multi-select mode and save applies default `period` across the selected range.
-4. Tap-based single-day editing remains available and does not conflict with long-press behavior.
-5. Quick actions do not create a second data model.
+3. Long press enters multi-select mode and drag behavior selects or deselects continuous dates based on the start cell state.
+4. While still in multi-select mode, tapping a day can toggle just that day for micro-adjustment.
+5. Tap-based single-day editing opens a property panel instead of a start/end action panel.
+6. The selected-day panel supports `月经正常`, property editing, and clearing without a separate “记录异常” flow.
+7. The homepage no longer depends on a dedicated quick actions area.
 6. Shared and private entry points still resolve to the same module instance.
 
 ## Risks
 - Existing implementation may still rely on cycle-first assumptions in multiple files.
 - The current task tracker format diverged from the original `plan_tracker.py` schema and required compatibility fixes.
-- The existing `LR-008` worktree was created before the standard task plan was regenerated and must be updated before implementation starts.
+- The revised interaction contract removes the previously implemented quick actions area and two-tap range selection, so part of the in-progress homepage work must be reworked.

@@ -1,6 +1,7 @@
 const STORAGE_KEYS = {
   MODULE_INSTANCES: 'love-record/module-instances',
-  CYCLE_RECORDS: 'love-record/cycle-records',
+  DAY_RECORDS: 'love-record/day-records',
+  CYCLE_RECORDS: 'love-record/day-records',
   SHARED_SPACES: 'love-record/shared-spaces',
   MEMBERSHIPS: 'love-record/memberships',
   REMINDERS: 'love-record/reminders',

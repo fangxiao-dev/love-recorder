@@ -1,6 +1,7 @@
 const {
   DEFAULT_MENSTRUAL_DAYS,
   getCycleGroupsByModule,
+  listCycleRecordsByModule,
 } = require('./cycle-record-service');
 const {
   ensureSeededModuleData,
@@ -35,8 +36,9 @@ function toCycleRangeRecords(groups) {
 
 function buildCycleGroupsFromRecords(moduleInstanceId, records) {
   const groups = [];
+  const periodRecords = records.filter((record) => (record.bleedingState || 'period') === 'period');
 
-  records.forEach((record) => {
+  periodRecords.forEach((record) => {
     const current = groups[groups.length - 1];
     if (!current) {
       groups.push({
@@ -65,13 +67,16 @@ function buildCycleGroupsFromRecords(moduleInstanceId, records) {
   return groups;
 }
 
-function buildDateMaps(groups) {
+function buildDateMaps(groups, records) {
   const recordMap = new Map();
   const cycleIdMap = new Map();
 
+  records.forEach((record) => {
+    recordMap.set(record.recordDate, record);
+  });
+
   groups.forEach((group) => {
     group.days.forEach((record) => {
-      recordMap.set(record.recordDate, record);
       cycleIdMap.set(record.recordDate, group.cycleId);
     });
   });
@@ -154,7 +159,9 @@ function toDisplayDay(date, options) {
     isToday: date === options.today,
     isSelected: date === options.selectedDate,
     isInSelectedRange,
+    isSelectionAnchor: date === options.selectionAnchorDate,
     hasRecord: Boolean(record),
+    hasMarker: Boolean(record) && (record.bleedingState === 'special' || record.bleedingState === 'spotting'),
     isPeriod: options.periodDates.has(date),
     isPredicted: options.predictedDates.has(date),
     periodRole: getRangeRole(date, options.periodDates),
@@ -330,7 +337,7 @@ function buildStatusTexts(groups, today) {
   };
 }
 
-function getActivePeriodDates(groups, today, defaultMenstrualDays) {
+function getActivePeriodDates(groups, today, defaultMenstrualDays, blockedDates) {
   if (!groups.length) {
     return new Set();
   }
@@ -345,64 +352,78 @@ function getActivePeriodDates(groups, today, defaultMenstrualDays) {
   const visibleEndDate = today < latest.cycleEndDate ? today : today;
   const totalDays = diffDays(latest.cycleStartDate, visibleEndDate);
   for (let index = 0; index <= totalDays; index += 1) {
-    activeDates.add(addDays(latest.cycleStartDate, index));
+    const date = addDays(latest.cycleStartDate, index);
+    if (!blockedDates || !blockedDates.has(date)) {
+      activeDates.add(date);
+    }
   }
 
   return activeDates;
 }
 
+function getRecordedPeriodDates(groups) {
+  const periodDates = new Set();
+
+  groups.forEach((group) => {
+    group.days.forEach((record) => {
+      periodDates.add(record.recordDate);
+    });
+  });
+
+  return periodDates;
+}
+
 function buildSelectedDatePanel(options) {
   const selectedDate = options.selectedDate;
-  const latestGroup = options.groups[options.groups.length - 1] || null;
-  const hasRecord = options.recordMap.has(selectedDate);
-  const isWithinActiveWindow = latestGroup
-    && selectedDate >= latestGroup.cycleStartDate
-    && selectedDate <= options.activeWindowEndDate
-    && selectedDate <= options.today;
-
-  if (isWithinActiveWindow) {
-    return {
-      selectedDate,
-      mode: 'end-confirm',
-      title: `已进入经期第 ${diffDays(latestGroup.cycleStartDate, selectedDate) + 1} 天`,
-      description: '如果这一天是最后一天，直接点“是”完成闭环；否则保持“否”。',
-      cycleDay: diffDays(latestGroup.cycleStartDate, selectedDate) + 1,
-      primaryAction: {
-        key: 'end-yes',
-        label: '月经走了：是',
-      },
-      secondaryAction: {
-        key: 'end-no',
-        label: '月经走了：否',
-      },
-      exceptionAction: {
-        key: 'exception',
-        label: '记录异常',
-      },
-      hasRecord,
-    };
-  }
+  const record = options.recordMap.get(selectedDate) || null;
+  const bleedingState = record ? record.bleedingState : 'none';
+  const stateLabels = {
+    none: '未记录',
+    period: '经期',
+    special: '特殊',
+  };
 
   return {
     selectedDate,
-    mode: 'start',
-    title: hasRecord ? '这一天已记录为经期日' : '这一天还没有月经状态',
-    description: hasRecord ? '如果这一天状态不符合预期，可以补充异常。' : '如果这一天是本次开始日，可以直接记为“月经来了”。',
-    cycleDay: null,
+    mode: 'day-state',
+    title: `当前状态：${stateLabels[bleedingState] || '未记录'}`,
+    description: '轻点直接编辑当天状态和属性；连续的经期天数会自动派生为经期区块。',
+    cycleDay: options.cycleIdMap.has(selectedDate)
+      ? getCycleDay(options.groups, selectedDate)
+      : null,
+    bleedingState,
     primaryAction: {
-      key: 'start',
-      label: '月经来了',
+      key: 'mark-normal',
+      label: '月经正常',
     },
-    secondaryAction: {
-      key: 'range',
-      label: '补录一段',
+    secondaryAction: null,
+    stateActions: [
+      { key: 'set-period', label: '经期', active: bleedingState === 'period' },
+      { key: 'set-special', label: '特殊', active: bleedingState === 'special' },
+    ],
+    clearAction: {
+      key: 'clear-record',
+      label: '清除记录',
     },
-    exceptionAction: {
-      key: 'exception',
-      label: '记录异常',
-    },
-    hasRecord,
+    attributeFields: [
+      { key: 'flowLevel', label: '流量', value: record ? record.flowLevel || '未填写' : '未填写', rawValue: record ? record.flowLevel || '' : '' },
+      { key: 'painLevel', label: '疼痛', value: record ? record.painLevel || '未填写' : '未填写', rawValue: record ? record.painLevel || '' : '' },
+      { key: 'colorLevel', label: '颜色', value: record ? record.colorLevel || '未填写' : '未填写', rawValue: record ? record.colorLevel || '' : '' },
+      { key: 'notes', label: '备注', value: record ? record.notes || '未填写' : '未填写', rawValue: record ? record.notes || '' : '' },
+    ],
+    hasRecord: Boolean(record),
   };
+}
+
+function getCycleDay(groups, selectedDate) {
+  const group = groups.find(
+    (item) => selectedDate >= item.cycleStartDate && selectedDate <= item.cycleEndDate
+  );
+  if (!group) {
+    return null;
+  }
+
+  return diffDays(group.cycleStartDate, selectedDate) + 1;
 }
 
 function buildModuleHomeViewModel(input) {
@@ -424,21 +445,16 @@ function buildModuleHomeViewModel(input) {
     }
   }
   const recordedDates = new Set(relevantRecords.map((item) => item.recordDate));
-  const activePeriodDates = getActivePeriodDates(groups, today, defaultMenstrualDays);
-  const periodDates = new Set([...recordedDates, ...activePeriodDates]);
-  const { recordMap, cycleIdMap } = buildDateMaps(groups);
-  const selectedRangeDates = new Set();
-  if (input.rangeSelectionStart) {
-    const rangeEnd = input.rangeSelectionEnd || input.rangeSelectionStart;
-    const totalDays = diffDays(input.rangeSelectionStart, rangeEnd);
-    for (let index = 0; index <= totalDays; index += 1) {
-      selectedRangeDates.add(addDays(input.rangeSelectionStart, index));
-    }
-  }
-  const latestGroup = groups[groups.length - 1] || null;
-  const activeWindowEndDate = latestGroup
-    ? addDays(latestGroup.cycleStartDate, defaultMenstrualDays - 1)
-    : '';
+  const blockedPeriodDates = new Set(
+    relevantRecords
+      .filter((item) => item.bleedingState && item.bleedingState !== 'period')
+      .map((item) => item.recordDate)
+  );
+  const recordedPeriodDates = getRecordedPeriodDates(groups);
+  const activePeriodDates = getActivePeriodDates(groups, today, defaultMenstrualDays, blockedPeriodDates);
+  const periodDates = new Set([...recordedPeriodDates, ...activePeriodDates]);
+  const { recordMap, cycleIdMap } = buildDateMaps(groups, relevantRecords);
+  const selectedRangeDates = new Set(input.selectedDates || []);
   const calendarOptions = {
     today,
     monthKey: input.monthCursor,
@@ -452,6 +468,7 @@ function buildModuleHomeViewModel(input) {
     recordedDates,
     selectedDate,
     selectedRangeDates,
+    selectionAnchorDate: input.selectionAnchorDate,
     windowStartDate: input.cycleWindowStartDate,
   };
 
@@ -471,7 +488,7 @@ function buildModuleHomeViewModel(input) {
       today,
       groups,
       recordMap,
-      activeWindowEndDate,
+      cycleIdMap,
     }),
     timelineDays: buildTimelineDays({
       today,
@@ -480,11 +497,13 @@ function buildModuleHomeViewModel(input) {
       predictedDates: [...predictedDates],
     }),
     hasHistory: groups.length > 0,
-    quickActions: [
-      { key: 'start', label: '今天来了', type: 'primary' },
-      { key: 'end', label: '今天结束了', type: 'secondary' },
-      { key: 'exception', label: '记录异常', type: 'secondary' },
-    ],
+    quickActions: [],
+    selectionMode: {
+      isActive: Boolean(input.isRangeSelectionMode),
+      dragMode: input.selectionDragMode || '',
+      selectedDates: [...selectedRangeDates].sort(),
+      anchorDate: input.selectionAnchorDate || '',
+    },
   };
 }
 
@@ -496,7 +515,7 @@ function getModuleHomeViewModel(input) {
   }
 
   const groups = getCycleGroupsByModule(input.moduleInstanceId);
-  const cycleRecords = groups.flatMap((item) => item.days);
+  const cycleRecords = listCycleRecordsByModule(input.moduleInstanceId);
 
   return buildModuleHomeViewModel({
     moduleInstance,
@@ -504,6 +523,10 @@ function getModuleHomeViewModel(input) {
     today: input.today,
     timelineDays: input.timelineDays,
     selectedDate: input.selectedDate,
+    isRangeSelectionMode: input.isRangeSelectionMode,
+    selectionDragMode: input.selectionDragMode,
+    selectionAnchorDate: input.selectionAnchorDate,
+    selectedDates: input.selectedDates,
     calendarMode: input.calendarMode,
     cycleWindowStartDate: input.cycleWindowStartDate,
     monthCursor: input.monthCursor,

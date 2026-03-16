@@ -12,16 +12,13 @@
   <view class="card">
     <view class="calendar-heading">
       <view class="section-title">周期日历</view>
-      <view class="calendar-actions">
-        <button class="calendar-link {{isRangeSelectionMode ? 'calendar-link-active' : ''}}" bindtap="onEnterRangeMode">补录一段</button>
-        <view class="mode-switch">
-          <view class="mode-pill {{calendarMode === 'cycle-window' ? 'mode-pill-active' : ''}}" data-mode="cycle-window" bindtap="onCalendarModeTap">周期窗</view>
-          <view class="mode-pill {{calendarMode === 'month' ? 'mode-pill-active' : ''}}" data-mode="month" bindtap="onCalendarModeTap">月视图</view>
-        </view>
+      <view class="mode-switch">
+        <view class="mode-pill {{calendarMode === 'cycle-window' ? 'mode-pill-active' : ''}}" data-mode="cycle-window" bindtap="onCalendarModeTap">周期窗</view>
+        <view class="mode-pill {{calendarMode === 'month' ? 'mode-pill-active' : ''}}" data-mode="month" bindtap="onCalendarModeTap">月视图</view>
       </view>
     </view>
 
-    <view wx:if="{{calendarMode === 'cycle-window' && cycleWindow}}" class="calendar-panel">
+    <view wx:if="{{calendarMode === 'cycle-window' && cycleWindow}}" class="calendar-panel" bindtouchmove="onCalendarTouchMove" bindtouchend="onCalendarTouchEnd">
       <view class="calendar-toolbar">
         <button class="mini-nav-btn" data-start-date="{{cycleWindow.previousStartDate}}" bindtap="onCycleWindowStep">上一周</button>
         <view class="calendar-range">{{cycleWindow.startDate}} - {{cycleWindow.endDate}}</view>
@@ -44,14 +41,17 @@
         <view class="calendar-week">
           <block wx:for="{{week.days}}" wx:key="id" wx:for-item="day">
             <view
-              class="calendar-day {{day.isInSelectedRange ? 'is-selected-range' : ''}} {{day.isSelected ? 'is-selected' : ''}} {{day.isPeriod ? 'is-period' : ''}} {{day.isPredicted ? 'is-predicted' : ''}} {{day.isToday ? 'is-today' : ''}} {{day.periodRole !== 'none' ? 'period-' + day.periodRole : ''}} {{day.predictionRole !== 'none' ? 'prediction-' + day.predictionRole : ''}}"
+              class="calendar-day cycle-window-day {{day.isInSelectedRange ? 'is-selected-range' : ''}} {{day.isSelected ? 'is-selected' : ''}} {{day.isPeriod ? 'is-period' : ''}} {{day.isPredicted ? 'is-predicted' : ''}} {{day.isToday ? 'is-today' : ''}} {{day.periodRole !== 'none' ? 'period-' + day.periodRole : ''}} {{day.predictionRole !== 'none' ? 'prediction-' + day.predictionRole : ''}}"
+              hover-class="none"
               data-date="{{day.date}}"
               data-record-id="{{day.recordId}}"
               data-cycle-id="{{day.cycleId}}"
               bindtap="onCalendarDayTap"
+              bindlongpress="onCalendarDayLongPress"
             >
               <view class="day-number">{{day.dayLabel}}</view>
-              <view class="day-dot {{day.hasRecord ? 'day-dot-visible' : ''}}"></view>
+              <view class="day-dot {{day.hasMarker ? 'day-dot-visible' : ''}}"></view>
+              <view wx:if="{{day.isSelectionAnchor}}" class="anchor-ring"></view>
             </view>
           </block>
         </view>
@@ -82,15 +82,15 @@
               bindtap="onCalendarDayTap"
             >
               <view class="day-number">{{day.dayLabel}}</view>
-              <view class="day-dot {{day.hasRecord ? 'day-dot-visible' : ''}}"></view>
+              <view class="day-dot {{day.hasMarker ? 'day-dot-visible' : ''}}"></view>
             </view>
           </block>
         </view>
       </block>
     </view>
 
-    <view class="timeline-legend">
-      <view class="legend-item"><text class="legend-dot legend-recorded"></text>已记录</view>
+      <view class="timeline-legend">
+      <view class="legend-item"><text class="legend-dot legend-special"></text>特殊</view>
       <view class="legend-item"><text class="legend-dot legend-period"></text>经期区间</view>
       <view class="legend-item"><text class="legend-dot legend-predicted"></text>预测窗口</view>
       <view class="legend-item"><text class="legend-dot legend-today"></text>今天</view>
@@ -98,13 +98,13 @@
 
     <view class="inline-panel">
       <view wx:if="{{isRangeSelectionMode}}" class="panel-block">
-        <view class="panel-title">补录一段</view>
-        <view class="panel-copy">先点开始日，再点结束日。选中后直接在首页完成补录。</view>
-        <view class="range-meta">开始：{{rangeSelectionStart || '未选择'}}</view>
-        <view class="range-meta">结束：{{rangeSelectionEnd || '未选择'}}</view>
+        <view class="panel-title">批量编辑</view>
+        <view class="panel-copy">长按起点后滑动刷选。起点未选中时为批量选中，起点已选中时为批量取消；未退出前可单点某天微调。</view>
+        <view class="range-meta">当前模式：{{selectionMode.dragMode === 'deselect' ? '批量取消' : '批量选中'}}</view>
+        <view class="range-meta">触达日期：{{selectionMode.selectedDates.length}} 天</view>
         <view class="panel-actions">
           <button class="panel-btn panel-btn-secondary" bindtap="onRangeCancel">取消</button>
-          <button class="panel-btn panel-btn-primary" bindtap="onRangeSave">保存区间</button>
+          <button class="panel-btn panel-btn-primary" bindtap="onRangeSave">保存批量编辑</button>
         </view>
       </view>
 
@@ -112,6 +112,7 @@
         <view class="panel-date">{{selectedDatePanel.selectedDate}}</view>
         <view class="panel-title">{{selectedDatePanel.title}}</view>
         <view class="panel-copy">{{selectedDatePanel.description}}</view>
+        <view wx:if="{{selectedDatePanel.cycleDay}}" class="range-meta">经期第 {{selectedDatePanel.cycleDay}} 天</view>
         <view class="panel-actions">
           <button
             class="panel-btn panel-btn-primary"
@@ -120,34 +121,52 @@
           >
             {{selectedDatePanel.primaryAction.label}}
           </button>
-          <button
-            wx:if="{{selectedDatePanel.secondaryAction}}"
-            class="panel-btn panel-btn-secondary"
-            data-action="{{selectedDatePanel.secondaryAction.key}}"
-            bindtap="onSelectedPanelAction"
-          >
-            {{selectedDatePanel.secondaryAction.label}}
-          </button>
+        </view>
+        <view class="state-chip-row">
+          <block wx:for="{{selectedDatePanel.stateActions}}" wx:key="key">
+            <view
+              class="state-chip {{item.active ? 'state-chip-active' : ''}}"
+              data-action="{{item.key}}"
+              bindtap="onSelectedPanelAction"
+            >
+              {{item.label}}
+            </view>
+          </block>
+        </view>
+        <view class="attribute-grid">
+          <view class="attribute-field">
+            <view class="attribute-label">流量</view>
+            <picker mode="selector" range="{{flowOptions}}" value="{{panelFlowIndex}}" data-field="flow" bindchange="onPanelPickerChange">
+              <view class="attribute-value">{{flowOptions[panelFlowIndex] || '未填写'}}</view>
+            </picker>
+          </view>
+          <view class="attribute-field">
+            <view class="attribute-label">疼痛</view>
+            <picker mode="selector" range="{{painOptions}}" value="{{panelPainIndex}}" data-field="pain" bindchange="onPanelPickerChange">
+              <view class="attribute-value">{{painOptions[panelPainIndex] || '未填写'}}</view>
+            </picker>
+          </view>
+          <view class="attribute-field">
+            <view class="attribute-label">颜色</view>
+            <picker mode="selector" range="{{colorOptions}}" value="{{panelColorIndex}}" data-field="color" bindchange="onPanelPickerChange">
+              <view class="attribute-value">{{colorOptions[panelColorIndex] || '未填写'}}</view>
+            </picker>
+          </view>
+        </view>
+        <view class="attribute-field attribute-field-notes">
+          <view class="attribute-label">备注</view>
+          <textarea class="panel-textarea" value="{{panelNotes}}" bindinput="onPanelNotesInput" bindblur="onPanelNotesBlur" placeholder="可留空" />
         </view>
         <view class="panel-subactions">
           <view
             class="panel-link"
-            data-action="{{selectedDatePanel.exceptionAction.key}}"
+            data-action="{{selectedDatePanel.clearAction.key}}"
             bindtap="onSelectedPanelAction"
           >
-            {{selectedDatePanel.exceptionAction.label}}
+            {{selectedDatePanel.clearAction.label}}
           </view>
         </view>
       </view>
-    </view>
-  </view>
-
-  <view class="card">
-    <view class="section-title">快捷操作</view>
-    <view class="quick-grid">
-      <block wx:for="{{quickActions}}" wx:key="key">
-        <button class="quick-btn {{item.type === 'primary' ? 'quick-btn-primary' : ''}}" data-action="{{item.key}}" bindtap="onQuickActionTap">{{item.label}}</button>
-      </block>
     </view>
   </view>
 

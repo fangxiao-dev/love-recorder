@@ -1,24 +1,15 @@
-const FLOW_LEVELS = ['light', 'medium', 'heavy'];
-const PAIN_LEVELS = ['mild', 'moderate', 'severe'];
+const { FLOW_LEVELS, PAIN_LEVELS, COLOR_LEVELS, createDayRecord } = require('./day-record');
 
 function createCycleRecord(input) {
-  return {
-    id: input.id,
-    moduleInstanceId: input.moduleInstanceId,
-    recordDate: input.recordDate,
-    flowLevel: input.flowLevel || null,
-    painLevel: input.painLevel || null,
-    notes: input.notes || '',
-    source: input.source || 'owner',
-    lastEditedByUserId: input.lastEditedByUserId || input.createdByUserId,
-    createdByUserId: input.createdByUserId,
-    createdAt: input.createdAt,
-    updatedAt: input.updatedAt,
-  };
+  return createDayRecord({
+    ...input,
+    bleedingState: input.bleedingState || 'period',
+  });
 }
 
 module.exports = {
   FLOW_LEVELS,
   PAIN_LEVELS,
+  COLOR_LEVELS,
   createCycleRecord,
 };

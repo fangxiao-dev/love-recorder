@@ -3,13 +3,18 @@ const assert = require('node:assert/strict');
 
 const { STORAGE_KEYS, remove } = require('../../services/storage');
 const {
+  COLOR_LEVELS,
+  clearDayRecord,
   createCycleRange,
   createCycleRangeRecord,
   getCycleGroupsByModule,
+  getCycleRecordByDate,
   listCycleRecordsByModule,
   listCycleDays,
   recordCycleEnd,
   recordCycleStart,
+  saveDayRecord,
+  saveNormalDayRecord,
   saveCycleException,
   markCycleEnd,
   markCycleStart,
@@ -240,5 +245,50 @@ test('createCycleRangeRecord rejects future dates', () => {
       });
     },
     (error) => error instanceof ValidationError && error.message.includes('未来日期')
+  );
+});
+
+test('saveDayRecord supports special without extending a derived cycle', () => {
+  saveDayRecord('module-private-active', {
+    recordDate: '2026-03-15',
+    bleedingState: 'special',
+    colorLevel: COLOR_LEVELS[0],
+    editorUserId: 'user-owner',
+  });
+
+  const saved = getCycleRecordByDate('module-private-active', '2026-03-15');
+  const groups = getCycleGroupsByModule('module-private-active');
+
+  assert.equal(saved.bleedingState, 'special');
+  assert.equal(groups[0].cycleStartDate, '2026-03-14');
+  assert.equal(groups[0].cycleEndDate, '2026-03-14');
+});
+
+test('saveNormalDayRecord writes default normal observations through the same day model', () => {
+  const saved = saveNormalDayRecord('module-private-inactive', {
+    recordDate: '2026-03-16',
+    editorUserId: 'user-owner',
+  });
+
+  assert.equal(saved.bleedingState, 'period');
+  assert.equal(saved.flowLevel, 'medium');
+  assert.equal(saved.painLevel, 'none');
+  assert.equal(saved.colorLevel, 'normal');
+});
+
+test('clearDayRecord removes the explicit day and lets the cycle split', () => {
+  createCycleRangeRecord('module-private-inactive', '2026-03-10', '2026-03-12', 'user-owner');
+
+  const removed = clearDayRecord('module-private-inactive', '2026-03-11');
+  const groups = getCycleGroupsByModule('module-private-inactive')
+    .filter((item) => item.cycleStartDate >= '2026-03-10');
+
+  assert.equal(removed, true);
+  assert.deepEqual(
+    groups.map((group) => [group.cycleStartDate, group.cycleEndDate]),
+    [
+      ['2026-03-12', '2026-03-12'],
+      ['2026-03-10', '2026-03-10'],
+    ]
   );
 });

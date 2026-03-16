@@ -1,4 +1,4 @@
-const { createCycleRecord } = require('../models/cycle-record');
+const { createDayRecord } = require('../models/day-record');
 const { createModuleInstance, MODULE_INSTANCE_STATES } = require('../models/module-instance');
 const { createMembership, createSharedSpace, MEMBERSHIP_ROLES } = require('../models/shared-space');
 const { STORAGE_KEYS } = require('../services/storage');
@@ -72,64 +72,76 @@ const memberships = [
   }),
 ];
 
-const cycleRecords = [
-  createCycleRecord({
+const dayRecords = [
+  createDayRecord({
     id: 'record-active-001',
     moduleInstanceId: 'module-private-active',
     recordDate: '2026-03-14',
+    bleedingState: 'period',
     flowLevel: 'medium',
+    colorLevel: 'normal',
     createdByUserId: users.owner.id,
     lastEditedByUserId: users.owner.id,
     createdAt: BASE_TIMESTAMP,
     updatedAt: BASE_TIMESTAMP,
   }),
-  createCycleRecord({
+  createDayRecord({
     id: 'record-inactive-001-d1',
     moduleInstanceId: 'module-private-inactive',
     recordDate: '2026-02-20',
+    bleedingState: 'period',
     flowLevel: 'light',
+    colorLevel: 'normal',
     createdByUserId: users.owner.id,
     lastEditedByUserId: users.owner.id,
     createdAt: BASE_TIMESTAMP,
     updatedAt: BASE_TIMESTAMP,
   }),
-  createCycleRecord({
+  createDayRecord({
     id: 'record-inactive-001-d2',
     moduleInstanceId: 'module-private-inactive',
     recordDate: '2026-02-21',
+    bleedingState: 'period',
     flowLevel: 'medium',
+    colorLevel: 'normal',
     createdByUserId: users.owner.id,
     lastEditedByUserId: users.owner.id,
     createdAt: BASE_TIMESTAMP,
     updatedAt: BASE_TIMESTAMP,
   }),
-  createCycleRecord({
+  createDayRecord({
     id: 'record-shared-001-d1',
     moduleInstanceId: 'module-shared',
     recordDate: '2026-03-22',
+    bleedingState: 'period',
     flowLevel: 'heavy',
+    colorLevel: 'dark',
     createdByUserId: users.owner.id,
     lastEditedByUserId: users.owner.id,
     createdAt: BASE_TIMESTAMP,
     updatedAt: BASE_TIMESTAMP,
   }),
-  createCycleRecord({
+  createDayRecord({
     id: 'record-shared-001-d2',
     moduleInstanceId: 'module-shared',
     recordDate: '2026-03-23',
+    bleedingState: 'period',
     flowLevel: 'medium',
     painLevel: 'mild',
+    colorLevel: 'normal',
     createdByUserId: users.owner.id,
     lastEditedByUserId: users.partner.id,
     createdAt: BASE_TIMESTAMP,
     updatedAt: BASE_TIMESTAMP,
   }),
-  createCycleRecord({
+  createDayRecord({
     id: 'record-shared-001-d3',
     moduleInstanceId: 'module-shared',
     recordDate: '2026-03-24',
+    bleedingState: 'period',
     flowLevel: 'light',
     painLevel: 'moderate',
+    colorLevel: 'bright',
     notes: '第三天状态平稳',
     createdByUserId: users.owner.id,
     lastEditedByUserId: users.partner.id,
@@ -140,7 +152,7 @@ const cycleRecords = [
 
 const seedCollections = {
   [STORAGE_KEYS.MODULE_INSTANCES]: moduleInstances,
-  [STORAGE_KEYS.CYCLE_RECORDS]: cycleRecords,
+  [STORAGE_KEYS.DAY_RECORDS]: dayRecords,
   [STORAGE_KEYS.SHARED_SPACES]: sharedSpaces,
   [STORAGE_KEYS.MEMBERSHIPS]: memberships,
 };

@@ -69,7 +69,8 @@ test('buildModuleHomeViewModel centers cycle window around the active cycle and 
   assert.equal(todayCell.isPeriod, true);
   assert.equal(todayCell.recordId, 'module-active-2026-03-16');
   assert.equal(todayCell.cycleId, 'module-active:2026-03-14');
-  assert.equal(viewModel.quickActions.map((item) => item.key).join(','), 'start,end,exception');
+  assert.equal(Array.isArray(viewModel.quickActions), true);
+  assert.equal(viewModel.quickActions.length, 0);
 });
 
 test('buildModuleHomeViewModel centers cycle window around prediction and exposes month view metadata', () => {
@@ -188,7 +189,7 @@ test('getModuleHomeViewModel keeps month mode and month cursor when requested', 
   assert.equal(viewModel.monthView.monthKey, '2026-04');
 });
 
-test('buildModuleHomeViewModel returns start action for an empty selected day', () => {
+test('buildModuleHomeViewModel exposes property-first day editing for an empty selected day', () => {
   const moduleInstance = createModuleInstance({
     id: 'module-panel-empty',
     ownerUserId: 'user-owner',
@@ -207,11 +208,63 @@ test('buildModuleHomeViewModel returns start action for an empty selected day', 
   });
 
   assert.equal(viewModel.selectedDatePanel.selectedDate, '2026-03-16');
-  assert.equal(viewModel.selectedDatePanel.mode, 'start');
-  assert.equal(viewModel.selectedDatePanel.primaryAction.key, 'start');
+  assert.equal(viewModel.selectedDatePanel.mode, 'day-state');
+  assert.equal(viewModel.selectedDatePanel.bleedingState, 'none');
+  assert.equal(viewModel.selectedDatePanel.primaryAction.key, 'mark-normal');
+  assert.equal(viewModel.selectedDatePanel.secondaryAction, null);
+  assert.equal(viewModel.selectedDatePanel.stateActions.length, 2);
+  assert.equal(viewModel.selectedDatePanel.stateActions[1].label, '特殊');
+  assert.equal(viewModel.selectedDatePanel.attributeFields.length >= 4, true);
+  assert.equal(viewModel.selectedDatePanel.clearAction.key, 'clear-record');
 });
 
-test('buildModuleHomeViewModel returns end confirmation for days inside the active inferred window', () => {
+test('buildModuleHomeViewModel shows marker only for special records', () => {
+  const moduleInstance = createModuleInstance({
+    id: 'module-marker',
+    ownerUserId: 'user-owner',
+    state: MODULE_INSTANCE_STATES.PRIVATE,
+    name: '标记样例',
+    createdAt: '2026-03-16T09:00:00Z',
+    updatedAt: '2026-03-16T09:00:00Z',
+  });
+
+  const periodRecord = createCycleRecord({
+    id: 'module-marker-2026-03-14',
+    moduleInstanceId: 'module-marker',
+    recordDate: '2026-03-14',
+    bleedingState: 'period',
+    createdByUserId: 'user-owner',
+    createdAt: '2026-03-16T09:00:00Z',
+    updatedAt: '2026-03-16T09:00:00Z',
+  });
+  const specialRecord = createCycleRecord({
+    id: 'module-marker-2026-03-15',
+    moduleInstanceId: 'module-marker',
+    recordDate: '2026-03-15',
+    bleedingState: 'special',
+    createdByUserId: 'user-owner',
+    createdAt: '2026-03-16T09:00:00Z',
+    updatedAt: '2026-03-16T09:00:00Z',
+  });
+
+  const viewModel = buildModuleHomeViewModel({
+    moduleInstance,
+    cycleRecords: [periodRecord, specialRecord],
+    today: '2026-03-16',
+    entry: 'modules',
+  });
+
+  const days = viewModel.cycleWindow.weeks.flatMap((week) => week.days);
+  const periodDay = days.find((day) => day.date === '2026-03-14');
+  const specialDay = days.find((day) => day.date === '2026-03-15');
+
+  assert.equal(periodDay.hasMarker, false);
+  assert.equal(periodDay.isPeriod, true);
+  assert.equal(specialDay.hasMarker, true);
+  assert.equal(specialDay.isPeriod, false);
+});
+
+test('buildModuleHomeViewModel keeps cycle day context for selected period dates', () => {
   const moduleInstance = createModuleInstance({
     id: 'module-panel-active',
     ownerUserId: 'user-owner',
@@ -225,20 +278,21 @@ test('buildModuleHomeViewModel returns end confirmation for days inside the acti
     moduleInstance,
     cycleRecords: [
       createRecord('module-panel-active', '2026-03-14'),
+      createRecord('module-panel-active', '2026-03-15'),
+      createRecord('module-panel-active', '2026-03-16'),
     ],
     today: '2026-03-16',
     selectedDate: '2026-03-16',
-    defaultMenstrualDays: 7,
     entry: 'modules',
   });
 
-  assert.equal(viewModel.selectedDatePanel.mode, 'end-confirm');
-  assert.equal(viewModel.selectedDatePanel.primaryAction.key, 'end-yes');
-  assert.equal(viewModel.selectedDatePanel.secondaryAction.key, 'end-no');
+  assert.equal(viewModel.selectedDatePanel.mode, 'day-state');
+  assert.equal(viewModel.selectedDatePanel.bleedingState, 'period');
+  assert.equal(viewModel.selectedDatePanel.primaryAction.key, 'mark-normal');
   assert.equal(viewModel.selectedDatePanel.cycleDay, 3);
 });
 
-test('buildModuleHomeViewModel removes range from quick actions and marks selected range days', () => {
+test('buildModuleHomeViewModel marks drag-selected days from a selectedDates list', () => {
   const moduleInstance = createModuleInstance({
     id: 'module-range-state',
     ownerUserId: 'user-owner',
@@ -253,12 +307,9 @@ test('buildModuleHomeViewModel removes range from quick actions and marks select
     cycleRecords: [],
     today: '2026-03-16',
     selectedDate: '2026-03-22',
-    rangeSelectionStart: '2026-03-20',
-    rangeSelectionEnd: '2026-03-23',
+    selectedDates: ['2026-03-20', '2026-03-21', '2026-03-22', '2026-03-23'],
     entry: 'modules',
   });
-
-  assert.equal(viewModel.quickActions.some((item) => item.key === 'range'), false);
 
   const rangeDays = viewModel.monthView.weeks
     .flatMap((week) => week.days)
@@ -271,4 +322,33 @@ test('buildModuleHomeViewModel removes range from quick actions and marks select
     '2026-03-22',
     '2026-03-23',
   ]);
+});
+
+test('buildModuleHomeViewModel exposes selection mode metadata for drag editing', () => {
+  const moduleInstance = createModuleInstance({
+    id: 'module-selection-mode',
+    ownerUserId: 'user-owner',
+    state: MODULE_INSTANCE_STATES.PRIVATE,
+    name: '拖选样例',
+    createdAt: '2026-03-16T09:00:00Z',
+    updatedAt: '2026-03-16T09:00:00Z',
+  });
+
+  const viewModel = buildModuleHomeViewModel({
+    moduleInstance,
+    cycleRecords: [
+      createRecord('module-selection-mode', '2026-03-08'),
+      createRecord('module-selection-mode', '2026-03-09'),
+    ],
+    today: '2026-03-16',
+    selectedDate: '2026-03-08',
+    isRangeSelectionMode: true,
+    selectionDragMode: 'deselect',
+    selectedDates: ['2026-03-08', '2026-03-09', '2026-03-10'],
+    entry: 'modules',
+  });
+
+  assert.equal(viewModel.selectionMode.isActive, true);
+  assert.equal(viewModel.selectionMode.dragMode, 'deselect');
+  assert.deepEqual(viewModel.selectionMode.selectedDates, ['2026-03-08', '2026-03-09', '2026-03-10']);
 });

@@ -375,6 +375,7 @@ Include checks for:
 - long-press range entry
 - day-state to derived-cycle consistency
 - same-instance behavior across personal and shared views
+- single-day `period / spotting / clear` editing on the homepage
 
 **Step 2: Execute manual verification**
 

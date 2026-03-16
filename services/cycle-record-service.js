@@ -1,4 +1,12 @@
-const { FLOW_LEVELS, PAIN_LEVELS } = require('../models/cycle-record');
+const {
+  BLEEDING_STATES,
+  FLOW_LEVELS,
+  PAIN_LEVELS,
+  COLOR_LEVELS,
+  createDayRecord,
+  deriveCycleGroups,
+  resolveBleedingState,
+} = require('../models/day-record');
 const { seedCollections } = require('../mock/seed-data');
 const { STORAGE_KEYS, get, set, loadSeedData } = require('./storage');
 const { DAY_IN_MS, diffDays, formatDate, parseDateString } = require('../utils/date');
@@ -12,7 +20,7 @@ class ValidationError extends Error {
 }
 
 function ensureSeeded() {
-  const hasRecords = get(STORAGE_KEYS.CYCLE_RECORDS);
+  const hasRecords = get(STORAGE_KEYS.DAY_RECORDS);
   const hasModules = get(STORAGE_KEYS.MODULE_INSTANCES);
 
   if (!hasRecords || !hasModules) {
@@ -22,7 +30,7 @@ function ensureSeeded() {
 
 function getAllCycleRecords() {
   ensureSeeded();
-  const records = get(STORAGE_KEYS.CYCLE_RECORDS) || [];
+  const records = get(STORAGE_KEYS.DAY_RECORDS) || [];
   const migrated = migrateLegacyRecords(records);
   if (migrated.changed) {
     saveAllCycleRecords(migrated.records);
@@ -36,42 +44,40 @@ function createRecordId(moduleInstanceId, recordDate) {
 
 function buildRecord(moduleInstanceId, recordDate, editorUserId) {
   const now = new Date().toISOString();
-  return {
+  return createDayRecord({
     id: createRecordId(moduleInstanceId, recordDate),
     moduleInstanceId,
     recordDate,
+    bleedingState: 'period',
     flowLevel: null,
     painLevel: null,
+    colorLevel: null,
     notes: '',
     source: 'owner',
     createdByUserId: editorUserId,
     lastEditedByUserId: editorUserId,
     createdAt: now,
     updatedAt: now,
-  };
+  });
 }
 
-function saveNewRecords(recordsToCreate) {
-  if (!recordsToCreate.length) {
-    return [];
-  }
-
+function saveChangedRecords(recordsToSave) {
   const allRecords = getAllCycleRecords();
-  const existingKeys = new Set(allRecords.map((item) => `${item.moduleInstanceId}:${item.recordDate}`));
-  const deduped = recordsToCreate.filter(
-    (item) => !existingKeys.has(`${item.moduleInstanceId}:${item.recordDate}`)
-  );
-
-  if (!deduped.length) {
-    return [];
-  }
-
-  saveAllCycleRecords([...allRecords, ...deduped]);
-  return deduped;
+  const recordMap = new Map(allRecords.map((item) => [`${item.moduleInstanceId}:${item.recordDate}`, item]));
+  recordsToSave.forEach((item) => {
+    recordMap.set(`${item.moduleInstanceId}:${item.recordDate}`, item);
+  });
+  const merged = [...recordMap.values()].sort((left, right) => {
+    const leftKey = `${left.moduleInstanceId}:${left.recordDate}`;
+    const rightKey = `${right.moduleInstanceId}:${right.recordDate}`;
+    return leftKey.localeCompare(rightKey);
+  });
+  saveAllCycleRecords(merged);
+  return recordsToSave;
 }
 
 function saveAllCycleRecords(records) {
-  set(STORAGE_KEYS.CYCLE_RECORDS, records);
+  set(STORAGE_KEYS.DAY_RECORDS, records);
   return records;
 }
 
@@ -81,19 +87,21 @@ function buildRecordId(moduleInstanceId, recordDate) {
 
 function createRecord(input) {
   const now = new Date().toISOString();
-  return {
+  return createDayRecord({
     id: input.id || buildRecordId(input.moduleInstanceId, input.recordDate),
     moduleInstanceId: input.moduleInstanceId,
     recordDate: input.recordDate,
+    bleedingState: input.bleedingState || 'period',
     flowLevel: input.flowLevel || null,
     painLevel: input.painLevel || null,
+    colorLevel: input.colorLevel || null,
     notes: input.notes || '',
     source: input.source || 'owner',
     createdByUserId: input.createdByUserId,
     lastEditedByUserId: input.lastEditedByUserId || input.createdByUserId,
     createdAt: input.createdAt || now,
     updatedAt: input.updatedAt || now,
-  };
+  });
 }
 
 function listCycleRecordsByModule(moduleInstanceId) {
@@ -107,71 +115,28 @@ function listCycleRecordsByModule(moduleInstanceId) {
 }
 
 function getCycleGroupsByModule(moduleInstanceId) {
-  const records = listCycleRecordsByModule(moduleInstanceId)
-    .filter((record) => record.recordDate)
-    .sort((left, right) => left.recordDate.localeCompare(right.recordDate));
-
-  if (!records.length) {
-    return [];
-  }
-
-  const groups = [];
-  let current = {
+  return deriveCycleGroups(
     moduleInstanceId,
-    cycleStartDate: records[0].recordDate,
-    cycleEndDate: records[0].recordDate,
-    days: [records[0]],
-  };
-
-  for (let index = 1; index < records.length; index += 1) {
-    const item = records[index];
-    const gap = diffDays(current.cycleEndDate, item.recordDate);
-    if (gap <= 1) {
-      current.days.push(item);
-      current.cycleEndDate = item.recordDate;
-    } else {
-      groups.push(toCycleSummary(current));
-      current = {
-        moduleInstanceId,
-        cycleStartDate: item.recordDate,
-        cycleEndDate: item.recordDate,
-        days: [item],
-      };
-    }
-  }
-
-  groups.push(toCycleSummary(current));
-  return groups.sort((left, right) => right.cycleStartDate.localeCompare(left.cycleStartDate));
+    listCycleRecordsByModule(moduleInstanceId)
+  ).sort((left, right) => right.cycleStartDate.localeCompare(left.cycleStartDate));
 }
 
 function listCycleDays(moduleInstanceId, cycleId) {
   const group = getCycleGroupsByModule(moduleInstanceId).find((item) => item.cycleId === cycleId);
-  if (!group) {
-    return [];
-  }
-
-  return listCycleRecordsByModule(moduleInstanceId)
-    .filter((record) => record.recordDate >= group.cycleStartDate && record.recordDate <= group.cycleEndDate)
-    .sort((left, right) => left.recordDate.localeCompare(right.recordDate));
-}
-
-function toCycleSummary(group) {
-  const days = group.days.sort((left, right) => left.recordDate.localeCompare(right.recordDate));
-  return {
-    cycleId: `${group.moduleInstanceId}:${group.cycleStartDate}`,
-    moduleInstanceId: group.moduleInstanceId,
-    cycleStartDate: group.cycleStartDate,
-    cycleEndDate: group.cycleEndDate,
-    dayCount: days.length,
-    days,
-    latestUpdatedAt: days[days.length - 1].updatedAt || null,
-  };
+  return group ? [...group.days].sort((left, right) => left.recordDate.localeCompare(right.recordDate)) : [];
 }
 
 function migrateLegacyRecords(records) {
   let changed = false;
   const normalized = records.flatMap((record) => {
-    if (record.recordDate) {
+    if (record.recordDate && record.bleedingState) {
+      if (record.bleedingState === 'spotting') {
+        changed = true;
+        return [createRecord({
+          ...record,
+          bleedingState: 'special',
+        })];
+      }
       return [record];
     }
 
@@ -181,13 +146,22 @@ function migrateLegacyRecords(records) {
         return expandLegacyCycleRecord(record);
       }
 
-      return [{
+      return [createRecord({
         ...record,
         recordDate: record.startDate,
-      }];
+        bleedingState: 'period',
+      })];
     }
 
-    return [record];
+    if (record.recordDate) {
+      changed = true;
+      return [createRecord({
+        ...record,
+        bleedingState: resolveBleedingState(record),
+      })];
+    }
+
+    return [];
   });
 
   return {
@@ -201,11 +175,12 @@ function expandLegacyCycleRecord(record) {
   const expanded = [];
   for (let index = 0; index <= total; index += 1) {
     const date = formatDate(new Date(parseDateString(record.startDate).getTime() + index * DAY_IN_MS));
-    expanded.push({
+    expanded.push(createRecord({
       ...record,
       id: `${record.id}-d${index + 1}`,
       recordDate: date,
-    });
+      bleedingState: 'period',
+    }));
   }
   return expanded;
 }
@@ -233,13 +208,33 @@ function createCycleRangeRecord(moduleInstanceId, startDate, endDate, editorUser
   validateNotFuture(endDate, options.today);
 
   const totalDays = diffDays(startDate, endDate);
-  const toCreate = [];
+  const records = getAllCycleRecords();
+  const recordMap = new Map(records.map((item) => [`${item.moduleInstanceId}:${item.recordDate}`, item]));
+  const changedDates = [];
+  const toSave = [];
   for (let index = 0; index <= totalDays; index += 1) {
     const recordDate = formatDate(new Date(parseDateString(startDate).getTime() + index * DAY_IN_MS));
-    toCreate.push(buildRecord(moduleInstanceId, recordDate, editorUserId));
+    const key = `${moduleInstanceId}:${recordDate}`;
+    const existing = recordMap.get(key);
+    const next = createRecord({
+      ...(existing || {}),
+      id: existing ? existing.id : createRecordId(moduleInstanceId, recordDate),
+      moduleInstanceId,
+      recordDate,
+      bleedingState: 'period',
+      createdByUserId: existing ? existing.createdByUserId : editorUserId,
+      lastEditedByUserId: editorUserId,
+    });
+    const isChanged = !existing
+      || existing.bleedingState !== next.bleedingState
+      || existing.lastEditedByUserId !== next.lastEditedByUserId;
+    if (isChanged) {
+      changedDates.push(recordDate);
+      toSave.push(next);
+    }
   }
 
-  const createdRecords = saveNewRecords(toCreate);
+  const createdRecords = saveChangedRecords(toSave);
   return {
     moduleInstanceId,
     startDate,
@@ -252,11 +247,8 @@ function markCycleStart(moduleInstanceId, recordDate, editorUserId) {
   const options = arguments[3] || {};
   validateRange(recordDate, recordDate);
   validateNotFuture(recordDate, options.today);
-  const createdRecords = saveNewRecords([
-    buildRecord(moduleInstanceId, recordDate, editorUserId),
-  ]);
-
-  return createdRecords[0] || listCycleRecordsByModule(moduleInstanceId).find((item) => item.recordDate === recordDate);
+  createCycleRangeRecord(moduleInstanceId, recordDate, recordDate, editorUserId, options);
+  return listCycleRecordsByModule(moduleInstanceId).find((item) => item.recordDate === recordDate);
 }
 
 function findActiveCycleStart(moduleInstanceId, endDate, defaultMenstrualDays) {
@@ -285,7 +277,16 @@ function markCycleEnd(moduleInstanceId, endDate, editorUserId, options) {
     throw new ValidationError('没有可结束的进行中周期');
   }
 
-  createCycleRangeRecord(moduleInstanceId, cycleStartDate, endDate, editorUserId);
+  const latestGroup = getCycleGroupsByModule(moduleInstanceId).find(
+    (item) => item.cycleStartDate === cycleStartDate
+  );
+  const fillStartDate = latestGroup && latestGroup.cycleEndDate > cycleStartDate
+    ? formatDate(new Date(parseDateString(latestGroup.cycleEndDate).getTime() + DAY_IN_MS))
+    : cycleStartDate;
+
+  if (fillStartDate <= endDate) {
+    createCycleRangeRecord(moduleInstanceId, fillStartDate, endDate, editorUserId, options);
+  }
 
   return getCycleGroupsByModule(moduleInstanceId).find(
     (item) => item.cycleStartDate === cycleStartDate
@@ -303,9 +304,63 @@ function getCycleRecordByDate(moduleInstanceId, recordDate) {
   ) || null;
 }
 
+function saveDayRecord(moduleInstanceId, input) {
+  const recordDate = input.recordDate;
+  const existing = getCycleRecordByDate(moduleInstanceId, recordDate);
+  const patch = {
+    recordDate,
+    bleedingState: input.bleedingState,
+    flowLevel: input.flowLevel || null,
+    painLevel: input.painLevel || null,
+    colorLevel: input.colorLevel || null,
+    notes: input.notes || '',
+  };
+
+  validateRecordPatch(patch);
+
+  if (existing) {
+    return updateCycleRecord(existing.id, patch, input.editorUserId);
+  }
+
+  const records = getAllCycleRecords();
+  const created = createRecord({
+    moduleInstanceId,
+    ...patch,
+    createdByUserId: input.editorUserId,
+    lastEditedByUserId: input.editorUserId,
+  });
+  saveAllCycleRecords([...records, created]);
+  return created;
+}
+
+function clearDayRecord(moduleInstanceId, recordDate) {
+  const records = getAllCycleRecords();
+  const nextRecords = records.filter(
+    (item) => !(item.moduleInstanceId === moduleInstanceId && item.recordDate === recordDate)
+  );
+  saveAllCycleRecords(nextRecords);
+  return nextRecords.length !== records.length;
+}
+
+function saveNormalDayRecord(moduleInstanceId, input) {
+  return saveDayRecord(moduleInstanceId, {
+    recordDate: input.recordDate,
+    bleedingState: 'period',
+    flowLevel: 'medium',
+    painLevel: 'none',
+    colorLevel: 'normal',
+    notes: input.notes || '',
+    editorUserId: input.editorUserId,
+  });
+}
+
 function validateRecordPatch(patch) {
   if (!patch.recordDate || typeof patch.recordDate !== 'string') {
     throw new ValidationError('记录日期不能为空');
+  }
+
+  if (patch.bleedingState && !BLEEDING_STATES.includes(patch.bleedingState)) {
+    throw new ValidationError('月经状态无效');
   }
 
   if (patch.flowLevel && !FLOW_LEVELS.includes(patch.flowLevel)) {
@@ -314,6 +369,10 @@ function validateRecordPatch(patch) {
 
   if (patch.painLevel && !PAIN_LEVELS.includes(patch.painLevel)) {
     throw new ValidationError('疼痛等级无效');
+  }
+
+  if (patch.colorLevel && !COLOR_LEVELS.includes(patch.colorLevel)) {
+    throw new ValidationError('颜色等级无效');
   }
 }
 
@@ -335,6 +394,8 @@ function updateCycleRecord(recordId, patch, editorUserId) {
   const now = new Date().toISOString();
   const updatedRecord = {
     ...merged,
+    bleedingState: merged.bleedingState || 'period',
+    colorLevel: merged.colorLevel || null,
     notes: merged.notes || '',
     updatedAt: now,
     lastEditedByUserId: editorUserId || merged.lastEditedByUserId,
@@ -348,117 +409,78 @@ function updateCycleRecord(recordId, patch, editorUserId) {
 
 function createCycleRange(moduleInstanceId, input) {
   const { startDate, endDate, editorUserId } = input;
-  if (!startDate || !endDate) {
-    throw new ValidationError('开始和结束日期不能为空');
-  }
-
-  if (endDate < startDate) {
-    throw new ValidationError('结束日期不能早于开始日期');
-  }
-
-  const records = getAllCycleRecords();
-  const nextRecords = [...records];
-  const created = [];
-  const total = diffDays(startDate, endDate);
-
-  for (let index = 0; index <= total; index += 1) {
-    const recordDate = formatDate(new Date(parseDateString(startDate).getTime() + index * DAY_IN_MS));
-    const existing = nextRecords.find(
-      (item) => item.moduleInstanceId === moduleInstanceId && item.recordDate === recordDate
-    );
-
-    if (existing) {
-      created.push(existing);
-      continue;
-    }
-
-    const record = createRecord({
-      moduleInstanceId,
-      recordDate,
-      createdByUserId: editorUserId,
-      lastEditedByUserId: editorUserId,
-    });
-    nextRecords.push(record);
-    created.push(record);
-  }
-
-  saveAllCycleRecords(nextRecords);
-  return created;
+  createCycleRangeRecord(moduleInstanceId, startDate, endDate, editorUserId, {
+    today: input.today,
+  });
+  return listCycleRecordsByModule(moduleInstanceId)
+    .filter((item) => item.recordDate >= startDate && item.recordDate <= endDate)
+    .sort((left, right) => left.recordDate.localeCompare(right.recordDate));
 }
 
 function recordCycleStart(moduleInstanceId, input) {
   const today = input.today || formatDate(new Date());
-  const existing = getCycleRecordByDate(moduleInstanceId, today);
-  if (existing) {
-    return existing;
-  }
-
-  const records = getAllCycleRecords();
-  const record = createRecord({
-    moduleInstanceId,
+  return saveDayRecord(moduleInstanceId, {
     recordDate: today,
-    createdByUserId: input.editorUserId,
-    lastEditedByUserId: input.editorUserId,
+    bleedingState: 'period',
+    editorUserId: input.editorUserId,
   });
-  saveAllCycleRecords([...records, record]);
-  return record;
 }
 
 function recordCycleEnd(moduleInstanceId, input) {
   const today = input.today || formatDate(new Date());
-  const groups = getCycleGroupsByModule(moduleInstanceId)
-    .sort((left, right) => right.cycleStartDate.localeCompare(left.cycleStartDate));
-  const latest = groups[0];
+  const defaultMenstrualDays = input.defaultMenstrualDays || DEFAULT_MENSTRUAL_DAYS;
+  const latest = findActiveCycleStart(moduleInstanceId, today, defaultMenstrualDays);
 
   if (!latest) {
     throw new ValidationError('没有可结束的经期');
   }
 
-  const startDate = formatDate(
-    new Date(parseDateString(latest.cycleEndDate).getTime() + DAY_IN_MS)
+  const latestGroup = getCycleGroupsByModule(moduleInstanceId).find(
+    (item) => item.cycleStartDate === latest
   );
+  const fillStartDate = latestGroup
+    ? formatDate(new Date(parseDateString(latestGroup.cycleEndDate).getTime() + DAY_IN_MS))
+    : today;
 
-  if (startDate > today) {
+  if (fillStartDate > today) {
     return [];
   }
 
   return createCycleRange(moduleInstanceId, {
-    startDate,
+    startDate: fillStartDate,
     endDate: today,
     editorUserId: input.editorUserId,
+    today,
   });
 }
 
 function saveCycleException(moduleInstanceId, input) {
   const recordDate = input.recordDate || input.today || formatDate(new Date());
+  const existing = getCycleRecordByDate(moduleInstanceId, recordDate);
   const patch = {
     recordDate,
+    bleedingState: input.bleedingState || (existing ? existing.bleedingState : 'period'),
     flowLevel: input.flowLevel || null,
     painLevel: input.painLevel || null,
+    colorLevel: input.colorLevel || null,
     notes: input.notes || '',
   };
 
   validateRecordPatch(patch);
-
-  const existing = getCycleRecordByDate(moduleInstanceId, recordDate);
   if (existing) {
     return updateCycleRecord(existing.id, patch, input.editorUserId);
   }
-
-  const records = getAllCycleRecords();
-  const created = createRecord({
-    moduleInstanceId,
+  return saveDayRecord(moduleInstanceId, {
     ...patch,
-    createdByUserId: input.editorUserId,
-    lastEditedByUserId: input.editorUserId,
+    editorUserId: input.editorUserId,
   });
-  saveAllCycleRecords([...records, created]);
-  return created;
 }
 
 module.exports = {
   DEFAULT_MENSTRUAL_DAYS,
+  COLOR_LEVELS,
   ValidationError,
+  clearDayRecord,
   createCycleRange,
   createCycleRangeRecord,
   getCycleGroupsByModule,
@@ -468,6 +490,8 @@ module.exports = {
   listCycleRecordsByModule,
   recordCycleEnd,
   recordCycleStart,
+  saveDayRecord,
+  saveNormalDayRecord,
   saveCycleException,
   markCycleEnd,
   markCycleStart,
