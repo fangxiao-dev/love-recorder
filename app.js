@@ -1,5 +1,5 @@
 App({
   globalData: {
-    appName: 'love-record',
+    appName: 'love-recorder',
   },
 });

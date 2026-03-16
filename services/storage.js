@@ -1,10 +1,10 @@
 const STORAGE_KEYS = {
-  MODULE_INSTANCES: 'love-record/module-instances',
-  DAY_RECORDS: 'love-record/day-records',
-  CYCLE_RECORDS: 'love-record/day-records',
-  SHARED_SPACES: 'love-record/shared-spaces',
-  MEMBERSHIPS: 'love-record/memberships',
-  REMINDERS: 'love-record/reminders',
+  MODULE_INSTANCES: 'love-recorder/module-instances',
+  DAY_RECORDS: 'love-recorder/day-records',
+  CYCLE_RECORDS: 'love-recorder/day-records',
+  SHARED_SPACES: 'love-recorder/shared-spaces',
+  MEMBERSHIPS: 'love-recorder/memberships',
+  REMINDERS: 'love-recorder/reminders',
 };
 
 function getStorageAdapter() {

@@ -27,8 +27,8 @@
 | Future prediction markers were initially invisible because the timeline ended at today | Extended the visible band to include predicted days when the module is inactive |
 
 ## Resources
-- [2026-03-16-menstrual-module-design.md](D:\CodeSpace\love-record\docs\plans\2026-03-16-menstrual-module-design.md)
-- [2026-03-16-menstrual-module-implementation-plan.md](D:\CodeSpace\love-record\docs\plans\2026-03-16-menstrual-module-implementation-plan.md)
+- [2026-03-16-menstrual-module-design.md](D:\CodeSpace\love-recorder\docs\plans\2026-03-16-menstrual-module-design.md)
+- [2026-03-16-menstrual-module-implementation-plan.md](D:\CodeSpace\love-recorder\docs\plans\2026-03-16-menstrual-module-implementation-plan.md)
 
 ## Visual/Browser Findings
 - The product discussion concluded that the homepage should be state-first, not calendar-first.

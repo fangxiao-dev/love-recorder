@@ -1,6 +1,6 @@
 {
   "appid": "touristappid",
-  "projectname": "love-record",
+  "projectname": "love-recorder",
   "compileType": "miniprogram",
   "libVersion": "3.6.3",
   "srcMiniprogramRoot": "./",

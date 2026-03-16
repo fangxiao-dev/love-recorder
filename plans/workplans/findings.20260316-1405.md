@@ -25,8 +25,8 @@
 | `rg.exe` unavailable in current environment | Switched to PowerShell `Select-String` for repository search |
 
 ## Resources
-- [project-context.md](D:\CodeSpace\love-record\project-context.md)
-- [2026-03-16-menstrual-module-design.md](D:\CodeSpace\love-record\docs\plans\2026-03-16-menstrual-module-design.md)
+- [project-context.md](D:\CodeSpace\love-recorder\project-context.md)
+- [2026-03-16-menstrual-module-design.md](D:\CodeSpace\love-recorder\docs\plans\2026-03-16-menstrual-module-design.md)
 
 ## Visual/Browser Findings
 - The shared-space design is intentionally medium-intensity: shared state and last editor, without heavy social interaction.

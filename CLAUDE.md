@@ -7,9 +7,9 @@
 - Contract baseline: use `project-context.md`, `tech-stack-investigate.md`, and the approved docs under `docs/plans/` as the project contract
 
 ## Reading Order
-1. Read [project-context.md](D:\CodeSpace\love-record\project-context.md).
-2. Read [tech-stack-investigate.md](D:\CodeSpace\love-record\tech-stack-investigate.md).
-3. Read the latest design or implementation plan under [docs/plans](D:\CodeSpace\love-record\docs\plans).
+1. Read [project-context.md](D:\CodeSpace\love-recorder\project-context.md).
+2. Read [tech-stack-investigate.md](D:\CodeSpace\love-recorder\tech-stack-investigate.md).
+3. Read the latest design or implementation plan under [docs/plans](D:\CodeSpace\love-recorder\docs\plans).
 
 ## Architecture Snapshot
 - Main directories:
@@ -96,10 +96,10 @@
   - update `docs/plans/` when a new validated design or implementation plan is created
 
 ## Contract Sources
-- [project-context.md](D:\CodeSpace\love-record\project-context.md)
-- [tech-stack-investigate.md](D:\CodeSpace\love-record\tech-stack-investigate.md)
-- [2026-03-16-menstrual-module-design.md](D:\CodeSpace\love-record\docs\plans\2026-03-16-menstrual-module-design.md)
-- [2026-03-16-menstrual-module-implementation-plan.md](D:\CodeSpace\love-record\docs\plans\2026-03-16-menstrual-module-implementation-plan.md)
+- [project-context.md](D:\CodeSpace\love-recorder\project-context.md)
+- [tech-stack-investigate.md](D:\CodeSpace\love-recorder\tech-stack-investigate.md)
+- [2026-03-16-menstrual-module-design.md](D:\CodeSpace\love-recorder\docs\plans\2026-03-16-menstrual-module-design.md)
+- [2026-03-16-menstrual-module-implementation-plan.md](D:\CodeSpace\love-recorder\docs\plans\2026-03-16-menstrual-module-implementation-plan.md)
 
 ## Maintenance
 - What belongs here:

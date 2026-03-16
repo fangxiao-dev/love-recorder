@@ -6,7 +6,7 @@
 - **Status:** completed
 - **Started:** 2026-03-16
 - Actions taken:
-  - Created task worktree `D:\CodeSpace\love-record\.worktrees\lr-003-feature-record-actions`.
+  - Created task worktree `D:\CodeSpace\love-recorder\.worktrees\lr-003-feature-record-actions`.
   - Created branch `codex/LR-003-feature-record-actions`.
   - Verified the task worktree starts from a clean git status.
   - Confirmed the current mini program scaffold files are present in the task worktree.

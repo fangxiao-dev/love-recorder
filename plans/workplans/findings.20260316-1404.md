@@ -30,8 +30,8 @@
 | Daily-only history list conflicted with product expectation | Added cycle detail page and grouped daily entries into cycle cards |
 
 ## Resources
-- [2026-03-16-menstrual-module-design.md](D:\CodeSpace\love-record\docs\plans\2026-03-16-menstrual-module-design.md)
-- [2026-03-16-menstrual-module-implementation-plan.md](D:\CodeSpace\love-record\docs\plans\2026-03-16-menstrual-module-implementation-plan.md)
+- [2026-03-16-menstrual-module-design.md](D:\CodeSpace\love-recorder\docs\plans\2026-03-16-menstrual-module-design.md)
+- [2026-03-16-menstrual-module-implementation-plan.md](D:\CodeSpace\love-recorder\docs\plans\2026-03-16-menstrual-module-implementation-plan.md)
 
 ## Visual/Browser Findings
 - The agreed design places history as a supporting view, not the primary screen.

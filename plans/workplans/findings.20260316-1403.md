@@ -25,8 +25,8 @@
 | Homepage and record actions both touch the same page files | Keep this branch focused on event wiring and service calls; avoid restyling the page |
 
 ## Resources
-- [2026-03-16-menstrual-module-design.md](D:\CodeSpace\love-record\docs\plans\2026-03-16-menstrual-module-design.md)
-- [2026-03-16-menstrual-module-implementation-plan.md](D:\CodeSpace\love-record\docs\plans\2026-03-16-menstrual-module-implementation-plan.md)
+- [2026-03-16-menstrual-module-design.md](D:\CodeSpace\love-recorder\docs\plans\2026-03-16-menstrual-module-design.md)
+- [2026-03-16-menstrual-module-implementation-plan.md](D:\CodeSpace\love-recorder\docs\plans\2026-03-16-menstrual-module-implementation-plan.md)
 
 ## Visual/Browser Findings
 - The approved MVP interaction favors fast actions and only asks for extra detail in exceptional situations.

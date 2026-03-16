@@ -1,7 +1,7 @@
 # Project Context
 
 ## Project Summary
-- Name: love-record
+- Name: love-recorder
 - Project type: WeChat Mini Program MVP
 - One-sentence purpose: Build a relationship-oriented record space that starts with a shared-capable menstrual tracking module.
 - Primary audience: couples who want a lightweight shared record space, with single-user onboarding supported before sharing
@@ -66,7 +66,7 @@
 
 ## Candidate Technical Direction
 - Summary: use a native WeChat Mini Program for the first runnable prototype, with local storage for MVP speed and a data shape that can later migrate to WeChat Cloud capabilities for sharing
-- Link to `tech-stack-investigate.md`: [tech-stack-investigate.md](D:\CodeSpace\love-record\tech-stack-investigate.md)
+- Link to `tech-stack-investigate.md`: [tech-stack-investigate.md](D:\CodeSpace\love-recorder\tech-stack-investigate.md)
 
 ## Confirmed Facts
 - The product target is a WeChat Mini Program.

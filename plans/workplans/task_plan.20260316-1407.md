@@ -76,9 +76,9 @@ Phase 1
 
 ## Notes
 - Parallel contract with LR-003:
-  - LR-007 owns homepage markup and styles in [pages/module-home/index.wxml](/D:/CodeSpace/love-record/pages/module-home/index.wxml) and [pages/module-home/index.wxss](/D:/CodeSpace/love-record/pages/module-home/index.wxss).
-  - LR-007 may extend [pages/module-home/index.js](/D:/CodeSpace/love-record/pages/module-home/index.js) only for calendar navigation handlers such as mode switch, day tap, window jump, and scroll-state updates.
+  - LR-007 owns homepage markup and styles in [pages/module-home/index.wxml](/D:/CodeSpace/love-recorder/pages/module-home/index.wxml) and [pages/module-home/index.wxss](/D:/CodeSpace/love-recorder/pages/module-home/index.wxss).
+  - LR-007 may extend [pages/module-home/index.js](/D:/CodeSpace/love-recorder/pages/module-home/index.js) only for calendar navigation handlers such as mode switch, day tap, window jump, and scroll-state updates.
   - LR-007 must not repurpose or rename the quick action keys `start`, `end`, `range`, `exception`, and must keep the page handler name `onQuickActionTap`.
   - LR-007 must keep the quick action container as a separate block fed by `quickActions`; it can restyle or move the block, but should not inline action-specific business logic into WXML.
-  - Calendar data shaping should be pushed into [services/module-home-service.js](/D:/CodeSpace/love-record/services/module-home-service.js) and covered by [tests/services/module-home-service.test.js](/D:/CodeSpace/love-record/tests/services/module-home-service.test.js), so both worktrees avoid large controller conflicts in homepage JS.
+  - Calendar data shaping should be pushed into [services/module-home-service.js](/D:/CodeSpace/love-recorder/services/module-home-service.js) and covered by [tests/services/module-home-service.test.js](/D:/CodeSpace/love-recorder/tests/services/module-home-service.test.js), so both worktrees avoid large controller conflicts in homepage JS.
   - LR-007 now owns the inline day-state editing shell on the homepage; LR-004 detail pages remain useful for deeper history editing but are no longer the primary tap target from the calendar.

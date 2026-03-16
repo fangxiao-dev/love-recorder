@@ -52,8 +52,8 @@ Phase 1
 ## Notes
 - Reuse the shared storage and service contract from LR-001.
 - Parallel contract with LR-007:
-  - LR-003 owns behavior wiring for quick actions in [pages/module-home/index.js](/D:/CodeSpace/love-record/pages/module-home/index.js).
+  - LR-003 owns behavior wiring for quick actions in [pages/module-home/index.js](/D:/CodeSpace/love-recorder/pages/module-home/index.js).
   - Allowed homepage edits in LR-003: `onQuickActionTap`, any action-specific helper methods, and the minimal reload path after save.
-  - Forbidden homepage edits in LR-003: replacing calendar markup, renaming calendar-related data fields, changing visual structure in [pages/module-home/index.wxml](/D:/CodeSpace/love-record/pages/module-home/index.wxml), or editing styles in [pages/module-home/index.wxss](/D:/CodeSpace/love-record/pages/module-home/index.wxss).
-  - LR-003 should push new logic into [services/cycle-record-service.js](/D:/CodeSpace/love-record/services/cycle-record-service.js) and dedicated pages such as [pages/record-range/index.js](/D:/CodeSpace/love-record/pages/record-range/index.js) instead of expanding homepage rendering logic.
+  - Forbidden homepage edits in LR-003: replacing calendar markup, renaming calendar-related data fields, changing visual structure in [pages/module-home/index.wxml](/D:/CodeSpace/love-recorder/pages/module-home/index.wxml), or editing styles in [pages/module-home/index.wxss](/D:/CodeSpace/love-recorder/pages/module-home/index.wxss).
+  - LR-003 should push new logic into [services/cycle-record-service.js](/D:/CodeSpace/love-recorder/services/cycle-record-service.js) and dedicated pages such as [pages/record-range/index.js](/D:/CodeSpace/love-recorder/pages/record-range/index.js) instead of expanding homepage rendering logic.
   - LR-003 must preserve these page-level bindings for LR-007 to consume: `quickActions`, `moduleInstanceId`, `primaryStatusText`, `secondaryStatusText`, `goToHistory`, and `onQuickActionTap`.

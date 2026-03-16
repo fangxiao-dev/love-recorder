@@ -27,10 +27,10 @@
 | Repo now has git metadata but no commits yet | Created an orphan worktree branch and copied the current uncommitted project files into it so isolated execution could continue |
 
 ## Resources
-- [project-context.md](D:\CodeSpace\love-record\project-context.md)
-- [tech-stack-investigate.md](D:\CodeSpace\love-record\tech-stack-investigate.md)
-- [2026-03-16-menstrual-module-design.md](D:\CodeSpace\love-record\docs\plans\2026-03-16-menstrual-module-design.md)
-- [2026-03-16-menstrual-module-implementation-plan.md](D:\CodeSpace\love-record\docs\plans\2026-03-16-menstrual-module-implementation-plan.md)
+- [project-context.md](D:\CodeSpace\love-recorder\project-context.md)
+- [tech-stack-investigate.md](D:\CodeSpace\love-recorder\tech-stack-investigate.md)
+- [2026-03-16-menstrual-module-design.md](D:\CodeSpace\love-recorder\docs\plans\2026-03-16-menstrual-module-design.md)
+- [2026-03-16-menstrual-module-implementation-plan.md](D:\CodeSpace\love-recorder\docs\plans\2026-03-16-menstrual-module-implementation-plan.md)
 
 ## Visual/Browser Findings
 - Manual verification in WeChat DevTools confirmed the landing page boots and all reserved placeholder routes open without runtime errors.
@@ -45,8 +45,8 @@
 - Canonical storage contract is `services/storage.js` with `get`, `set`, `remove`, and `loadSeedData`.
 - Canonical seed file is `mock/seed-data.js`.
 - Shared storage keys are:
-  - `love-record/module-instances`
-  - `love-record/cycle-records`
-  - `love-record/shared-spaces`
-  - `love-record/memberships`
-  - `love-record/reminders`
+  - `love-recorder/module-instances`
+  - `love-recorder/cycle-records`
+  - `love-recorder/shared-spaces`
+  - `love-recorder/memberships`
+  - `love-recorder/reminders`
