@@ -2,5 +2,9 @@
   <view class="card">
     <view class="title">{{title}}</view>
     <view class="subtitle">{{subtitle}}</view>
+    <view class="actions">
+      <button class="action-btn" bindtap="goToHistory">进入历史记录验收页</button>
+      <button class="action-btn ghost" bindtap="goToModuleHome">进入模块首页（占位）</button>
+    </view>
   </view>
 </view>

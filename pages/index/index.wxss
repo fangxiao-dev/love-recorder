@@ -1,3 +1,23 @@
 .title {
   color: #2e231c;
 }
+
+.actions {
+  margin-top: 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.action-btn {
+  background: #c28369 !important;
+  color: #fff !important;
+  border-radius: 14rpx;
+  font-size: 28rpx;
+}
+
+.action-btn.ghost {
+  background: #fff !important;
+  color: #8c5c45 !important;
+  border: 2rpx solid rgba(140, 92, 69, 0.35);
+}

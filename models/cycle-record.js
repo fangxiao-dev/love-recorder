@@ -5,8 +5,7 @@ function createCycleRecord(input) {
   return {
     id: input.id,
     moduleInstanceId: input.moduleInstanceId,
-    startDate: input.startDate,
-    endDate: input.endDate || null,
+    recordDate: input.recordDate,
     flowLevel: input.flowLevel || null,
     painLevel: input.painLevel || null,
     notes: input.notes || '',

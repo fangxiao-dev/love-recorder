@@ -1,6 +1,18 @@
 Page({
   data: {
     title: 'Love Record',
-    subtitle: '月经记录 MVP 基础壳已就绪，可继续进入模块页与后续功能开发。',
+    subtitle: '请从下面入口进入功能页做 UI 验收。',
+  },
+
+  goToHistory() {
+    wx.navigateTo({
+      url: '/pages/history/index',
+    });
+  },
+
+  goToModuleHome() {
+    wx.navigateTo({
+      url: '/pages/module-home/index',
+    });
   },
 });

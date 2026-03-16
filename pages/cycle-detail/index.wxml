@@ -1,0 +1,20 @@
+<view class="page-shell">
+  <view class="card">
+    <view class="title">周期详情</view>
+    <view wx:if="{{cycle}}" class="subtitle">{{cycle.cycleStartDate}} - {{cycle.cycleEndDate}} · {{cycle.dayCount}} 天</view>
+    <view wx:else class="subtitle">未找到该周期</view>
+  </view>
+
+  <view wx:if="{{isEmpty}}" class="card empty-card">
+    <view class="subtitle">该周期暂无天级记录。</view>
+  </view>
+
+  <view wx:for="{{days}}" wx:key="id" class="card list-item" data-record-id="{{item.id}}" bindtap="handleDayTap">
+    <view class="row">
+      <view class="item-title">{{item.recordDate}}</view>
+      <view class="item-link">编辑当天</view>
+    </view>
+    <view class="meta">流量：{{item.flowLevel || '未填'}} · 疼痛：{{item.painLevel || '未填'}}</view>
+    <view class="meta">备注：{{item.notes || '无'}}</view>
+  </view>
+</view>

@@ -6,6 +6,8 @@
     "pages/record-range/index",
     "pages/record-exception/index",
     "pages/history/index",
+    "pages/cycle-detail/index",
+    "pages/record-editor/index",
     "pages/shared-space/index",
     "pages/reminders/index"
   ],
