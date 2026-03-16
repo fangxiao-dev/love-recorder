@@ -1,8 +1,44 @@
 <view class="page-shell">
+  <view class="card hero-card">
+    <view class="eyebrow-row">
+      <view class="eyebrow">{{entryLabel}}</view>
+      <view class="state-pill">{{stateLabel}}</view>
+    </view>
+    <view class="title">{{moduleName}}</view>
+    <view class="status-text">{{primaryStatusText}}</view>
+    <view class="subtitle">{{secondaryStatusText}}</view>
+  </view>
+
   <view class="card">
-    <view class="title">{{pageTitle}}</view>
-    <view class="subtitle">{{pageNote}}</view>
-    <view class="meta">入口：{{entryLabel}}</view>
+    <view class="section-title">最近 35 天</view>
+    <scroll-view class="timeline-scroll" scroll-x enable-flex>
+      <view class="timeline-row">
+        <block wx:for="{{timelineDays}}" wx:key="id">
+          <view class="timeline-day {{item.isRecorded ? 'is-recorded' : ''}} {{item.isPredicted ? 'is-predicted' : ''}} {{item.isToday ? 'is-today' : ''}}">
+            <view class="timeline-month">{{item.monthLabel}}</view>
+            <view class="timeline-number">{{item.dayLabel}}</view>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+    <view class="timeline-legend">
+      <view class="legend-item"><text class="legend-dot legend-recorded"></text>已记录</view>
+      <view class="legend-item"><text class="legend-dot legend-predicted"></text>预测窗口</view>
+      <view class="legend-item"><text class="legend-dot legend-today"></text>今天</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">快捷操作</view>
+    <view class="quick-grid">
+      <block wx:for="{{quickActions}}" wx:key="key">
+        <button class="quick-btn {{item.type === 'primary' ? 'quick-btn-primary' : ''}}" data-action="{{item.key}}" bindtap="onQuickActionTap">{{item.label}}</button>
+      </block>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">更多</view>
     <view class="meta">模块实例：{{moduleInstanceId}}</view>
     <view class="action-row">
       <button class="nav-btn" bindtap="goToHistory">查看历史记录</button>
