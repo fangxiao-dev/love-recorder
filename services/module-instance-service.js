@@ -67,6 +67,10 @@ function listModulesForOwner(input) {
     }));
 }
 
+function getModuleInstanceById(moduleInstanceId) {
+  return getModuleInstances().find((item) => item.id === moduleInstanceId) || null;
+}
+
 function findLastEditorName(moduleInstanceId, usersById) {
   const relatedRecords = getCycleRecords()
     .filter((item) => item.moduleInstanceId === moduleInstanceId)
@@ -112,6 +116,7 @@ function resetModuleDataForTest() {
 
 module.exports = {
   ensureSeededModuleData,
+  getModuleInstanceById,
   listModulesForOwner,
   listSharedModules,
   getModuleHomeRoute,
