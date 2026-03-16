@@ -3,4 +3,31 @@
     <view class="title">{{pageTitle}}</view>
     <view class="subtitle">{{pageNote}}</view>
   </view>
+
+  <view class="card form-card">
+    <view class="field">
+      <view class="label">记录日期</view>
+      <picker mode="date" value="{{recordDate}}" bindchange="handleDateChange">
+        <view class="picker-value">{{recordDate || '请选择记录日期'}}</view>
+      </picker>
+    </view>
+    <view class="field">
+      <view class="label">流量等级</view>
+      <picker mode="selector" range="{{flowOptions}}" value="{{flowIndex}}" bindchange="handleFlowChange">
+        <view class="picker-value">{{flowLevel || '未填写'}}</view>
+      </picker>
+    </view>
+    <view class="field">
+      <view class="label">疼痛等级</view>
+      <picker mode="selector" range="{{painOptions}}" value="{{painIndex}}" bindchange="handlePainChange">
+        <view class="picker-value">{{painLevel || '未填写'}}</view>
+      </picker>
+    </view>
+    <view class="field">
+      <view class="label">备注</view>
+      <textarea class="textarea" value="{{notes}}" data-field="notes" bindinput="handleInputChange" placeholder="可留空" />
+    </view>
+    <view wx:if="{{errorMessage}}" class="error">{{errorMessage}}</view>
+    <button class="save-button" type="primary" bindtap="handleSave">保存异常信息</button>
+  </view>
 </view>

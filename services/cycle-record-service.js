@@ -75,6 +75,27 @@ function saveAllCycleRecords(records) {
   return records;
 }
 
+function buildRecordId(moduleInstanceId, recordDate) {
+  return `${moduleInstanceId}:${recordDate}`;
+}
+
+function createRecord(input) {
+  const now = new Date().toISOString();
+  return {
+    id: input.id || buildRecordId(input.moduleInstanceId, input.recordDate),
+    moduleInstanceId: input.moduleInstanceId,
+    recordDate: input.recordDate,
+    flowLevel: input.flowLevel || null,
+    painLevel: input.painLevel || null,
+    notes: input.notes || '',
+    source: input.source || 'owner',
+    createdByUserId: input.createdByUserId,
+    lastEditedByUserId: input.lastEditedByUserId || input.createdByUserId,
+    createdAt: input.createdAt || now,
+    updatedAt: input.updatedAt || now,
+  };
+}
+
 function listCycleRecordsByModule(moduleInstanceId) {
   return getAllCycleRecords()
     .filter((record) => record.moduleInstanceId === moduleInstanceId)
@@ -276,6 +297,12 @@ function getCycleRecordById(recordId) {
   return record || null;
 }
 
+function getCycleRecordByDate(moduleInstanceId, recordDate) {
+  return getAllCycleRecords().find(
+    (item) => item.moduleInstanceId === moduleInstanceId && item.recordDate === recordDate
+  ) || null;
+}
+
 function validateRecordPatch(patch) {
   if (!patch.recordDate || typeof patch.recordDate !== 'string') {
     throw new ValidationError('记录日期不能为空');
@@ -319,14 +346,129 @@ function updateCycleRecord(recordId, patch, editorUserId) {
   return updatedRecord;
 }
 
+function createCycleRange(moduleInstanceId, input) {
+  const { startDate, endDate, editorUserId } = input;
+  if (!startDate || !endDate) {
+    throw new ValidationError('开始和结束日期不能为空');
+  }
+
+  if (endDate < startDate) {
+    throw new ValidationError('结束日期不能早于开始日期');
+  }
+
+  const records = getAllCycleRecords();
+  const nextRecords = [...records];
+  const created = [];
+  const total = diffDays(startDate, endDate);
+
+  for (let index = 0; index <= total; index += 1) {
+    const recordDate = formatDate(new Date(parseDateString(startDate).getTime() + index * DAY_IN_MS));
+    const existing = nextRecords.find(
+      (item) => item.moduleInstanceId === moduleInstanceId && item.recordDate === recordDate
+    );
+
+    if (existing) {
+      created.push(existing);
+      continue;
+    }
+
+    const record = createRecord({
+      moduleInstanceId,
+      recordDate,
+      createdByUserId: editorUserId,
+      lastEditedByUserId: editorUserId,
+    });
+    nextRecords.push(record);
+    created.push(record);
+  }
+
+  saveAllCycleRecords(nextRecords);
+  return created;
+}
+
+function recordCycleStart(moduleInstanceId, input) {
+  const today = input.today || formatDate(new Date());
+  const existing = getCycleRecordByDate(moduleInstanceId, today);
+  if (existing) {
+    return existing;
+  }
+
+  const records = getAllCycleRecords();
+  const record = createRecord({
+    moduleInstanceId,
+    recordDate: today,
+    createdByUserId: input.editorUserId,
+    lastEditedByUserId: input.editorUserId,
+  });
+  saveAllCycleRecords([...records, record]);
+  return record;
+}
+
+function recordCycleEnd(moduleInstanceId, input) {
+  const today = input.today || formatDate(new Date());
+  const groups = getCycleGroupsByModule(moduleInstanceId)
+    .sort((left, right) => right.cycleStartDate.localeCompare(left.cycleStartDate));
+  const latest = groups[0];
+
+  if (!latest) {
+    throw new ValidationError('没有可结束的经期');
+  }
+
+  const startDate = formatDate(
+    new Date(parseDateString(latest.cycleEndDate).getTime() + DAY_IN_MS)
+  );
+
+  if (startDate > today) {
+    return [];
+  }
+
+  return createCycleRange(moduleInstanceId, {
+    startDate,
+    endDate: today,
+    editorUserId: input.editorUserId,
+  });
+}
+
+function saveCycleException(moduleInstanceId, input) {
+  const recordDate = input.recordDate || input.today || formatDate(new Date());
+  const patch = {
+    recordDate,
+    flowLevel: input.flowLevel || null,
+    painLevel: input.painLevel || null,
+    notes: input.notes || '',
+  };
+
+  validateRecordPatch(patch);
+
+  const existing = getCycleRecordByDate(moduleInstanceId, recordDate);
+  if (existing) {
+    return updateCycleRecord(existing.id, patch, input.editorUserId);
+  }
+
+  const records = getAllCycleRecords();
+  const created = createRecord({
+    moduleInstanceId,
+    ...patch,
+    createdByUserId: input.editorUserId,
+    lastEditedByUserId: input.editorUserId,
+  });
+  saveAllCycleRecords([...records, created]);
+  return created;
+}
+
 module.exports = {
   DEFAULT_MENSTRUAL_DAYS,
   ValidationError,
+  createCycleRange,
   createCycleRangeRecord,
   getCycleGroupsByModule,
+  getCycleRecordByDate,
   getCycleRecordById,
   listCycleDays,
   listCycleRecordsByModule,
+  recordCycleEnd,
+  recordCycleStart,
+  saveCycleException,
   markCycleEnd,
   markCycleStart,
   updateCycleRecord,
