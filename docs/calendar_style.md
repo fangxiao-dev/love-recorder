@@ -1,6 +1,7 @@
 结论：
 日历采用 **Cycle Window（三周网格）为默认视图 + Month View（整月）辅助视图**。
 默认以 **经期优先、预测期次之**为中心定位，使用 **3×7 网格（21 天）**，**上下滑动浏览时间**，每次滑动 **1 周**。
+编辑模型采用 **tap 查看/单日编辑 + long press 进入多选态**，记录真相为 `day_record`，周期区块由连续 `period` days 派生。
 
 下面是**收敛后的 UI 规格说明（可直接作为产品/设计文档）**。
 
@@ -261,21 +262,52 @@ Jun 24 – Jun 29
 
 ---
 
-# 9 日期点击行为
+# 9 日期交互行为
 
-点击某天：
+## 9.1 默认态点击
 
-进入
+轻点某天：
+
+- 打开下方 `Day Detail`
+- 展示当前日期状态
+- 允许单日修改
+
+单日主状态只保留：
 
 ```
-Day Detail
+none / period / spotting
 ```
+
+若该日没有显式记录，则默认解释为：
+
+```
+none
+```
+
+## 9.2 长按进入多选态
+
+长按某天后：
+
+- 进入多选态
+- 当前日期成为选择锚点
+- 拖动选择连续日期范围
+- 点击保存后，选中范围统一写入默认 `period`
+- 点击空白处或取消按钮退出多选态
+
+说明：
+
+- 这里不存在额外的“补录模型”
+- 今天以及之前的任意日期，都只是日期编辑
+- 多选保存的默认结果是批量创建 `day_record`
+
+## 9.3 单日详情面板内容
 
 内容：
 
 ```
 Date
-Cycle day
+Derived cycle day
+Bleeding state
 Flow level
 Pain level
 Color
@@ -285,9 +317,10 @@ Notes
 操作：
 
 ```
-Add record
-Edit record
-Delete record
+Set period
+Set spotting
+Clear record
+Edit details
 ```
 
 ---
@@ -349,7 +382,21 @@ Return to Cycle Window
 
 ---
 
-# 12 数据加载策略
+# 12 数据与加载策略
+
+数据真相：
+
+```
+day_record
+```
+
+解释规则：
+
+```
+无 day_record = none
+连续 period = derived cycle block
+spotting = day-level state only
+```
 
 Cycle Window：
 
@@ -429,4 +476,5 @@ Focus on cycle, not month
 2. 用户操作集中在 2–3 周范围
 3. 上下浏览时间更自然
 4. 视觉信息密度更低
+5. 交互简单，但底层仍支持拆分、补选、删除与周期重算
 

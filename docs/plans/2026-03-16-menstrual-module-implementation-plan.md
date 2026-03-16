@@ -4,7 +4,7 @@
 
 **Goal:** Build a WeChat Mini Program MVP for a menstrual tracking module that works for a single user and can later be shared into a collaborative space.
 
-**Architecture:** Start with a native WeChat Mini Program scaffold and model the product around a user-owned module instance that can optionally be mounted into a shared space. Keep the first release focused on fast record entry, a status-first homepage, and a lightweight collaboration layer that exposes shared visibility and last editor metadata.
+**Architecture:** Start with a native WeChat Mini Program scaffold and model the product around a user-owned module instance that can optionally be mounted into a shared space. Keep the first release focused on fast record entry, a status-first homepage, and a lightweight collaboration layer that exposes shared visibility and last editor metadata. Persist day-level menstrual states as the only source of truth, then derive cycle blocks and prediction inputs from consecutive `period` days.
 
 **Tech Stack:** Native WeChat Mini Program, JavaScript/TypeScript as chosen during scaffold, WeChat storage/cloud capability to be selected during project bootstrap
 
@@ -44,11 +44,12 @@ git add app.js app.json app.wxss project.config.json sitemap.json pages/index/in
 git commit -m "chore: bootstrap WeChat mini program shell"
 ```
 
-### Task 2: Define the domain model for module instances and shared spaces
+### Task 2: Define the day-state domain model for module instances and shared spaces
 
 **Files:**
 - Create: `models/module-instance.js`
 - Create: `models/shared-space.js`
+- Create: `models/day-record.js`
 - Create: `models/cycle-record.js`
 - Create: `utils/date.js`
 - Test: `tests/models/module-instance.spec.md`
@@ -59,11 +60,14 @@ Document exact fields for:
 - user-owned module instance
 - shared space
 - membership/access
-- cycle record
+- day record
+- derived cycle summary
 
 **Step 2: Implement the model helpers**
 
 Add helpers for:
+- resolving implicit `none` for missing days
+- applying a range of `period` day records
 - computing current cycle day
 - computing days since last start
 - computing predicted next window from recent cycles
@@ -76,7 +80,7 @@ Expected: known sample inputs produce correct cycle-day and prediction outputs
 **Step 4: Commit**
 
 ```bash
-git add models/module-instance.js models/shared-space.js models/cycle-record.js utils/date.js tests/models/module-instance.spec.md
+git add models/module-instance.js models/shared-space.js models/day-record.js models/cycle-record.js utils/date.js tests/models/module-instance.spec.md
 git commit -m "feat: define menstrual module domain model"
 ```
 
@@ -109,86 +113,81 @@ Display:
 
 When a day is tapped:
 - show the selected date status below the calendar
-- if the day has no state, default the main action to "月经来了"
-- if the day falls inside an active inferred period window, show "月经走了：是/否"
+- if the day has no explicit record, treat it as `none`
+- let the user set the day to `period` or `spotting`, or clear the record
 - keep editing on the homepage instead of forcing a detail-page jump
 
-**Step 4: Add quick actions**
+**Step 4: Add range-selection mode**
+
+Include:
+- long press to enter multi-select mode
+- drag to select a continuous range
+- save / cancel exit paths
+- range save writes default `period` states for all selected dates
+
+**Step 5: Add quick actions**
 
 Include buttons for:
 - 今天来了
 - 今天结束了
-- 补录一段
 - 记录异常
 
-`补录一段` should enter an inline range-backfill mode instead of navigating to a placeholder page.
+The range editor is the main date-editing model, so quick actions must remain shortcuts rather than a separate data flow.
 
-**Step 5: Verify in DevTools**
+**Step 6: Verify in DevTools**
 
 Run: preview the page with seeded mock data
 Expected:
 - Cycle Window and Month View both render correctly
 - tapped day opens inline status editing
 - empty day does not dead-end
+- long press enters range-selection mode cleanly
+- saving a range updates the cycle block immediately
 - status updates correctly for active-cycle and non-active-cycle examples
 
-**Step 6: Commit**
+**Step 7: Commit**
 
 ```bash
 git add pages/module-home/index.js pages/module-home/index.wxml pages/module-home/index.wxss app.json
 git commit -m "feat: add status-first menstrual module homepage"
 ```
 
-### Task 4: Implement one-tap record actions
+### Task 4: Implement one-tap record actions on top of the day-state model
 
 **Files:**
 - Modify: `pages/module-home/index.js`
 - Create: `services/cycle-record-service.js`
-- Create: `pages/record-range/index.js`
-- Create: `pages/record-range/index.wxml`
-- Create: `pages/record-range/index.wxss`
 
-**Step 1: Implement "今天来了" as cycle start**
+**Step 1: Implement "今天来了" as a day-state shortcut**
 
-When tapped, create a record whose start date is today, then refresh homepage state immediately.
+When tapped, write today's `day_record` as `period`, then refresh homepage state immediately.
 
-**Step 2: Implement inferred active period behavior**
+**Step 2: Implement "今天结束了" as an editing shortcut**
 
-After a cycle start is set:
-- treat following dates as "经期中" within the default menstrual-length window
-- default menstrual length to 7 days
-- allow a later settings surface to adjust this duration
+When tapped:
+- adjust the currently active derived block so today becomes its end boundary
+- do not create a separate cycle-first object shape
 
-**Step 3: Implement "今天结束了" / "月经走了：是"**
+**Step 3: Keep historical editing unified**
 
-When confirmed on a selected date:
-- set that selected day as the cycle end date
-- close the cycle loop explicitly
-- stop the inferred active period after that day
+Ensure:
+- there is no separate placeholder page for range backfill
+- range selection on the homepage is the only range-editing flow
+- quick actions call the same service helpers as manual edits
 
-**Step 4: Implement auto-close at default length**
-
-If the user never manually ends the cycle:
-- auto-close on the last day of the default menstrual-length window
-
-**Step 5: Implement "补录一段"**
-
-Implement inline range-selection on the homepage so the user can backfill a continuous historical segment without entering a separate placeholder page.
-
-**Step 6: Verify in DevTools**
+**Step 4: Verify in DevTools**
 
 Run: test each quick action against mock data
 Expected:
-- start action creates an active cycle
-- inferred active period persists through the default menstrual-length window
-- explicit end action closes the active cycle on the selected day
-- missing manual end still auto-closes at the default length
-- backfill creates a historical range inline
+- start action creates or extends today's day-state correctly
+- explicit end action closes the current derived block on today
+- homepage range selection creates a historical range inline
+- quick actions and manual edits keep the same data shape
 
-**Step 7: Commit**
+**Step 5: Commit**
 
 ```bash
-git add pages/module-home/index.js services/cycle-record-service.js pages/record-range/index.js pages/record-range/index.wxml pages/record-range/index.wxss
+git add pages/module-home/index.js services/cycle-record-service.js
 git commit -m "feat: add quick menstrual recording flows"
 ```
 
@@ -306,7 +305,8 @@ git commit -m "feat: add shared-space entry and collaboration metadata"
 
 Use mini program storage to persist:
 - module instances
-- cycle records
+- day records
+- derived cycle cache if needed
 - shared state metadata
 
 **Step 2: Add seed data support**
@@ -316,6 +316,7 @@ Support deterministic sample data to test:
 - shared mode
 - active cycle
 - inactive cycle
+- split / merged cycle examples from day-state edits
 
 **Step 3: Verify persistence**
 
@@ -370,8 +371,9 @@ git commit -m "feat: add reminder settings placeholder"
 Include checks for:
 - single-user flow
 - share-state labeling
-- one-tap start/end actions
-- backfill range entry
+- one-tap start/end actions as shortcuts
+- long-press range entry
+- day-state to derived-cycle consistency
 - same-instance behavior across personal and shared views
 
 **Step 2: Execute manual verification**

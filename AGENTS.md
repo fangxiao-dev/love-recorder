@@ -45,6 +45,12 @@
   - do not expand scope beyond the current MVP unless the user explicitly changes the milestone
   - when the task is multi-step, update the relevant design or plan doc first
   - keep plans tied to the current milestone: runnable prototype
+  - distinguish between:
+    - solution-level plans under `docs/plans/`, used to freeze product/design/technical direction
+    - WT-PM task-level plans under `plans/workplans/`, used to execute a specific tracked task
+  - a solution-level plan may guide one or more WT-PM task plans, but does not replace task-level planning inside the WT-PM workflow
+  - for simple work or when the user explicitly does not want WT-PM, it is acceptable to execute directly from an approved plan without creating a WT-PM task
+  - once work enters the WT-PM workflow, `plans/todo_current.md` plus `plans/workplans/` are the execution source of truth
   - mark assumptions and open questions explicitly
   - trunk-side planning should prepare the task context, but should not perform task-local install/setup work
 - Implementation expectations:
@@ -69,11 +75,16 @@
 ## Skill Usage
 - Default skills:
   - use `brainstorming` before creative design or feature changes
-  - use `writing-plans` before substantial implementation work
+  - use `writing-plans` when you need a solution-level implementation/design plan in `docs/plans/`
+  - use `planning-with-files` / `wt-plan` when the work should enter the WT-PM task workflow and be tracked in `plans/todo_current.md` and `plans/workplans/`
   - use `verification-before-completion` before claiming success
 - Trigger-based skills:
   - use `systematic-debugging` for bugs or failed behavior
   - use `test-driven-development` when implementing the MVP code
+- Plan layering rule:
+  - `writing-plans` defines broader feature or architecture intent
+  - `planning-with-files` defines task-specific execution inside WT-PM
+  - if both exist, the WT-PM task plan must follow the approved higher-level plan unless the user explicitly changes the design
 - Missing skill fallback:
   - state the gap briefly and continue with the closest disciplined workflow
 
