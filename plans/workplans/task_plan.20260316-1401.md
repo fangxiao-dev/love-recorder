@@ -8,55 +8,59 @@ Phase 1
 
 ## Phases
 ### Phase 1: Scaffold the app shell
-- [ ] Create the native mini program root files
-- [ ] Create `app.js`, `app.json`, `app.wxss`, `project.config.json`, and `sitemap.json`
-- [ ] Register all reserved MVP page paths in `app.json` to reduce downstream merge conflicts
+- [x] Create the native mini program root files
+- [x] Create `app.js`, `app.json`, `app.wxss`, `project.config.json`, and `sitemap.json`
+- [x] Register all reserved MVP page paths in `app.json` to reduce downstream merge conflicts
 - [ ] Reserved page paths:
-  - [ ] `pages/index/index`
-  - [ ] `pages/modules/index`
-  - [ ] `pages/module-home/index`
-  - [ ] `pages/record-range/index`
-  - [ ] `pages/record-exception/index`
-  - [ ] `pages/history/index`
-  - [ ] `pages/shared-space/index`
-  - [ ] `pages/reminders/index`
-- [ ] Ensure the project opens in WeChat DevTools
-- **Status:** in_progress
+  - [x] Reserved page paths:
+  - [x] `pages/index/index`
+  - [x] `pages/modules/index`
+  - [x] `pages/module-home/index`
+  - [x] `pages/record-range/index`
+  - [x] `pages/record-exception/index`
+  - [x] `pages/history/index`
+  - [x] `pages/shared-space/index`
+  - [x] `pages/reminders/index`
+- [x] Ensure the project opens in WeChat DevTools
+- **Status:** completed
 
 ### Phase 2: Freeze domain shapes and service contracts
-- [ ] Define `moduleInstance`, `cycleRecord`, `sharedSpace`, and `membership` shapes in dedicated files under `models/`
-- [ ] Add date and cycle calculation helpers in `utils/date.js`
-- [ ] Create `services/storage.js` with interface only, not full persistence wiring
+- [x] Define `moduleInstance`, `cycleRecord`, `sharedSpace`, and `membership` shapes in dedicated files under `models/`
+- [x] Add date and cycle calculation helpers in `utils/date.js`
+- [x] Create `services/storage.js` with interface only, not full persistence wiring
 - [ ] Freeze the storage contract to the minimum shared API:
-  - [ ] `get(key)`
-  - [ ] `set(key, value)`
-  - [ ] `remove(key)`
-  - [ ] `loadSeedData()`
+  - [x] Freeze the storage contract to the minimum shared API:
+  - [x] `get(key)`
+  - [x] `set(key, value)`
+  - [x] `remove(key)`
+  - [x] `loadSeedData()`
 - [ ] Freeze the service/data ownership boundary:
-  - [ ] `models/` owns data shape definitions
-  - [ ] `utils/date.js` owns pure date and cycle calculations
-  - [ ] `services/storage.js` owns persistence access only
-  - [ ] Feature pages must not define competing record or module shapes
-- **Status:** pending
+  - [x] Freeze the service/data ownership boundary:
+  - [x] `models/` owns data shape definitions
+  - [x] `utils/date.js` owns pure date and cycle calculations
+  - [x] `services/storage.js` owns persistence access only
+  - [x] Feature pages must not define competing record or module shapes
+- **Status:** completed
 
 ### Phase 3: Seed data and handoff docs
-- [ ] Add deterministic seed data shape in `mock/seed-data.js`
+- [x] Add deterministic seed data shape in `mock/seed-data.js`
 - [ ] Include at least these deterministic scenarios:
-  - [ ] private module with active cycle
-  - [ ] private module with inactive cycle
-  - [ ] shared module with last-editor metadata
-- [ ] Document page paths, model ownership, and service boundaries for parallel worktrees
-- [ ] Document the canonical IDs and storage keys used by seed data
-- [ ] Record merge-risk notes in findings and progress files
-- **Status:** pending
+  - [x] Include at least these deterministic scenarios:
+  - [x] private module with active cycle
+  - [x] private module with inactive cycle
+  - [x] shared module with last-editor metadata
+- [x] Document page paths, model ownership, and service boundaries for parallel worktrees
+- [x] Document the canonical IDs and storage keys used by seed data
+- [x] Record merge-risk notes in findings and progress files
+- **Status:** completed
 
 ### Phase 4: Verification
-- [ ] Verify the scaffold runs in WeChat DevTools
-- [ ] Verify helper functions return expected sample outputs from fixed seed cases
-- [ ] Verify `app.json` already contains the reserved route list needed by LR-002 to LR-005
-- [ ] Verify the handoff contract is specific enough that downstream tasks can implement without redefining shapes or routes
-- [ ] Confirm downstream task contracts are stable enough for parallel work
-- **Status:** pending
+- [x] Verify the scaffold runs in WeChat DevTools
+- [x] Verify helper functions return expected sample outputs from fixed seed cases
+- [x] Verify `app.json` already contains the reserved route list needed by LR-002 to LR-005
+- [x] Verify the handoff contract is specific enough that downstream tasks can implement without redefining shapes or routes
+- [x] Confirm downstream task contracts are stable enough for parallel work
+- **Status:** completed
 
 ## Deliverables
 - `app.js`

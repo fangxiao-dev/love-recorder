@@ -1,0 +1,6 @@
+<view class="page-shell">
+  <view class="card">
+    <view class="title">{{pageTitle}}</view>
+    <view class="subtitle">{{pageNote}}</view>
+  </view>
+</view>

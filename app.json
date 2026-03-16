@@ -1,0 +1,21 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/modules/index",
+    "pages/module-home/index",
+    "pages/record-range/index",
+    "pages/record-exception/index",
+    "pages/history/index",
+    "pages/shared-space/index",
+    "pages/reminders/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "Love Record",
+    "navigationBarBackgroundColor": "#FFF7F2",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FFF7F2",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
