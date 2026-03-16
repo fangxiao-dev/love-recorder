@@ -2,5 +2,7 @@
   <view class="card">
     <view class="title">{{pageTitle}}</view>
     <view class="subtitle">{{pageNote}}</view>
+    <view class="meta">入口：{{entryLabel}}</view>
+    <view class="meta">模块实例：{{moduleInstanceId}}</view>
   </view>
 </view>

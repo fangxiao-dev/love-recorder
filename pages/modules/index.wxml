@@ -3,4 +3,11 @@
     <view class="title">{{pageTitle}}</view>
     <view class="subtitle">{{pageNote}}</view>
   </view>
+
+  <block wx:for="{{modules}}" wx:key="id">
+    <view class="module-card" data-route="{{item.route}}" bindtap="onTapModuleCard">
+      <view class="module-name">{{item.name}}</view>
+      <view class="module-state">{{item.stateLabel}}</view>
+    </view>
+  </block>
 </view>

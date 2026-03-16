@@ -1,6 +1,15 @@
 Page({
   data: {
     pageTitle: '月经记录',
-    pageNote: 'foundation 预留详情页路由，状态卡和时间带由后续任务实现。',
+    pageNote: '当前页展示同实例路由信息，状态卡将在后续任务实现。',
+    moduleInstanceId: '',
+    entryLabel: '我的模块',
+  },
+  onLoad(options) {
+    const entry = options.entry || 'modules';
+    this.setData({
+      moduleInstanceId: options.moduleInstanceId || '',
+      entryLabel: entry === 'shared-space' ? '共享空间' : '我的模块',
+    });
   },
 });

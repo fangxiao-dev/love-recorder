@@ -2,5 +2,9 @@
   <view class="card">
     <view class="title">{{title}}</view>
     <view class="subtitle">{{subtitle}}</view>
+    <view class="entry-list">
+      <view class="entry-btn" bindtap="goToModules">进入我的模块</view>
+      <view class="entry-btn secondary" bindtap="goToSharedSpace">进入共享空间</view>
+    </view>
   </view>
 </view>

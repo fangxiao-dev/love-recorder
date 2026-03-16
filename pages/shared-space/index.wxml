@@ -2,5 +2,14 @@
   <view class="card">
     <view class="title">{{pageTitle}}</view>
     <view class="subtitle">{{pageNote}}</view>
+    <view class="invite-note">{{inviteNote}}</view>
   </view>
+
+  <block wx:for="{{sharedModules}}" wx:key="id">
+    <view class="module-card" data-route="{{item.route}}" bindtap="onTapSharedModule">
+      <view class="module-name">{{item.name}}</view>
+      <view class="module-meta">{{item.sharedStatusLabel}}</view>
+      <view class="module-meta">最近更新：{{item.lastEditorName}}</view>
+    </view>
+  </block>
 </view>
