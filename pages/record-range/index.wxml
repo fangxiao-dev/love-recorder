@@ -3,4 +3,21 @@
     <view class="title">{{pageTitle}}</view>
     <view class="subtitle">{{pageNote}}</view>
   </view>
+
+  <view class="card form-card">
+    <view class="field">
+      <view class="label">开始日期</view>
+      <picker mode="date" value="{{startDate}}" bindchange="handleDateChange" data-field="startDate">
+        <view class="picker-value">{{startDate || '请选择开始日期'}}</view>
+      </picker>
+    </view>
+    <view class="field">
+      <view class="label">结束日期</view>
+      <picker mode="date" value="{{endDate}}" bindchange="handleDateChange" data-field="endDate">
+        <view class="picker-value">{{endDate || '请选择结束日期'}}</view>
+      </picker>
+    </view>
+    <view wx:if="{{errorMessage}}" class="error">{{errorMessage}}</view>
+    <button class="save-button" type="primary" bindtap="handleSave">保存区间</button>
+  </view>
 </view>
