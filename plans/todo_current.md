@@ -2,12 +2,12 @@
 
 ## Workflow Notes
 - Status lifecycle: `UNPLANNED -> PLANNED -> DONE`
-- This repository is not yet a git repository, so these planning artifacts are prepared manually ahead of formal `wt-plan` execution.
-- Branch and worktree creation should happen later from trunk once git is initialized.
+- Git is initialized; tasks should now follow the normal WT-PM closure flow once planned work enters implementation.
+- A task is only fully complete after merge-back to trunk and status update to `DONE`.
 
 | Task ID | Slug | Title | Status | Plan ID | Dependencies | Parallel | Notes |
 |---------|------|-------|--------|---------|--------------|----------|-------|
-| LR-001 | foundation-miniapp | Bootstrap native mini program foundation | PLANNED | 20260316-1401 | none | no | Must land first; freezes scaffold, model shapes, and storage interface |
+| LR-001 | foundation-miniapp | Bootstrap native mini program foundation | DONE | 20260316-1401 | none | no | Landed on trunk; scaffold, model shapes, and storage interface are now frozen |
 | LR-002 | feature-module-home | Build status-first menstrual module homepage | PLANNED | 20260316-1402 | LR-001 | yes | Can run with seed data before full persistence |
 | LR-003 | feature-record-actions | Implement quick recording flows | PLANNED | 20260316-1403 | LR-001 | yes | Keep homepage edits minimal to reduce merge conflicts |
 | LR-004 | feature-history-editor | Build history list and record editor | PLANNED | 20260316-1404 | LR-001 | yes | Depends on shared record shape and edit service contract |
