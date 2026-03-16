@@ -4,14 +4,21 @@
 Implement the history view and record editor so users can review past cycles and update optional details without breaking the fast-entry model.
 
 ## Current Phase
-Phase 1
+Phase 0
 
 ## Phases
+### Phase 0: Readiness gate (added 2026-03-16)
+- [x] Confirm LR-004 stays inside MVP scope
+- [x] Define prototype edit validation boundary
+- [x] Freeze edit service contract for list/get/update
+- [ ] Create and enter LR-004 dedicated worktree
+- **Status:** in_progress
+
 ### Phase 1: Build the history list
 - [ ] Create the history list UI
 - [ ] Sort records by latest start date first
 - [ ] Handle empty-state rendering
-- **Status:** in_progress
+- **Status:** pending
 
 ### Phase 2: Build record editing
 - [ ] Create the record editor page
@@ -40,6 +47,7 @@ Phase 1
 |----------|-----------|
 | Keep history separate from the homepage | Avoids overloading the status-first main screen |
 | Allow optional detail fields to remain empty | Consistent with the low-friction MVP model |
+| Freeze `list/get/update` contract before coding | Reduce cross-branch drift and unblock worktree implementation |
 
 ## Errors Encountered
 | Error | Attempt | Resolution |
@@ -48,3 +56,6 @@ Phase 1
 
 ## Notes
 - Avoid re-implementing cycle calculations in the editor; use shared helpers from LR-001.
+- Readiness references:
+  - `plans/workplans/lr-004-readiness-checklist.20260316.md`
+  - `plans/workplans/lr-004-edit-service-contract.20260316.md`

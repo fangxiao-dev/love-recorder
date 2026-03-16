@@ -2,6 +2,20 @@
 
 ## Session: 2026-03-16
 
+### Phase 0: Readiness gate
+- **Status:** in_progress
+- **Started:** started
+- Actions taken:
+  - Added LR-004 start gate checklist and marked current readiness.
+  - Added edit service contract draft for `list/get/update`.
+  - Re-based task plan state to Phase 0 before coding.
+- Files created/modified:
+  - `plans/workplans/lr-004-readiness-checklist.20260316.md` (created)
+  - `plans/workplans/lr-004-edit-service-contract.20260316.md` (created)
+  - `plans/workplans/task_plan.20260316-1404.md` (updated)
+  - `plans/workplans/findings.20260316-1404.md` (updated)
+  - `plans/workplans/progress.20260316-1404.md` (updated)
+
 ### Phase 1: Build the history list
 - **Status:** pending
 - **Started:** not started
@@ -22,7 +36,8 @@
 ## Test Results
 | Test | Input | Expected | Actual | Status |
 |------|-------|----------|--------|--------|
-| Branch readiness | Foundation task complete | History/editor task can start | waiting on LR-001 | pending |
+| Branch readiness | Foundation task complete + plan docs frozen | LR-004 can start in dedicated worktree | foundation done; worktree missing | blocked |
+| Contract readiness | service boundary for list/edit | stable interface before implementation | `list/get/update` contract documented | pass |
 
 ## Error Log
 | Timestamp | Error | Attempt | Resolution |
