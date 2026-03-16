@@ -3,12 +3,20 @@ const assert = require('node:assert/strict');
 
 const { STORAGE_KEYS, remove } = require('../../services/storage');
 const {
+  createCycleRangeRecord,
   getCycleGroupsByModule,
   listCycleRecordsByModule,
   listCycleDays,
+  markCycleEnd,
+  markCycleStart,
   updateCycleRecord,
   ValidationError,
 } = require('../../services/cycle-record-service');
+
+test.beforeEach(() => {
+  remove(STORAGE_KEYS.CYCLE_RECORDS);
+  remove(STORAGE_KEYS.MODULE_INSTANCES);
+});
 
 test('listCycleRecordsByModule sorts by latest recordDate first', () => {
   remove(STORAGE_KEYS.CYCLE_RECORDS);
@@ -78,9 +86,6 @@ test('updateCycleRecord rejects unknown record id', () => {
 });
 
 test('getCycleGroupsByModule groups contiguous days into one cycle', () => {
-  remove(STORAGE_KEYS.CYCLE_RECORDS);
-  remove(STORAGE_KEYS.MODULE_INSTANCES);
-
   const groups = getCycleGroupsByModule('module-shared');
   assert.ok(groups.length >= 1);
   assert.equal(groups[0].cycleStartDate <= groups[0].cycleEndDate, true);
@@ -93,4 +98,71 @@ test('listCycleDays returns daily entries inside selected cycle', () => {
   const days = listCycleDays('module-shared', first.cycleId);
   assert.equal(days.length, first.dayCount);
   assert.equal(days[0].recordDate <= days[days.length - 1].recordDate, true);
+});
+
+test('markCycleStart creates a new record for the selected day', () => {
+  const created = markCycleStart('module-private-active', '2026-03-16', 'user-owner');
+
+  assert.equal(created.recordDate, '2026-03-16');
+  assert.equal(created.moduleInstanceId, 'module-private-active');
+
+  const records = listCycleRecordsByModule('module-private-active');
+  assert.equal(records.some((item) => item.recordDate === '2026-03-16'), true);
+});
+
+test('markCycleEnd fills the active cycle through the selected end day', () => {
+  markCycleStart('module-private-active', '2026-03-14', 'user-owner');
+
+  const result = markCycleEnd('module-private-active', '2026-03-18', 'user-owner', {
+    today: '2026-03-18',
+    defaultMenstrualDays: 7,
+  });
+
+  assert.equal(result.cycleStartDate, '2026-03-14');
+  assert.equal(result.cycleEndDate, '2026-03-18');
+
+  const cycleDates = listCycleRecordsByModule('module-private-active')
+    .filter((item) => item.recordDate >= '2026-03-14' && item.recordDate <= '2026-03-18')
+    .map((item) => item.recordDate)
+    .sort();
+
+  assert.deepEqual(cycleDates, [
+    '2026-03-14',
+    '2026-03-15',
+    '2026-03-16',
+    '2026-03-17',
+    '2026-03-18',
+  ]);
+});
+
+test('createCycleRangeRecord backfills a continuous range without duplicates', () => {
+  const created = createCycleRangeRecord('module-private-inactive', '2026-03-01', '2026-03-03', 'user-owner');
+
+  assert.equal(created.createdDates.length, 3);
+
+  const secondPass = createCycleRangeRecord('module-private-inactive', '2026-03-02', '2026-03-04', 'user-owner');
+  assert.equal(secondPass.createdDates.includes('2026-03-04'), true);
+  assert.equal(secondPass.createdDates.includes('2026-03-02'), false);
+});
+
+test('markCycleStart rejects future dates', () => {
+  assert.throws(
+    () => {
+      markCycleStart('module-private-active', '2026-03-20', 'user-owner', {
+        today: '2026-03-16',
+      });
+    },
+    (error) => error instanceof ValidationError && error.message.includes('未来日期')
+  );
+});
+
+test('createCycleRangeRecord rejects future dates', () => {
+  assert.throws(
+    () => {
+      createCycleRangeRecord('module-private-active', '2026-03-15', '2026-03-18', 'user-owner', {
+        today: '2026-03-16',
+      });
+    },
+    (error) => error instanceof ValidationError && error.message.includes('未来日期')
+  );
 });

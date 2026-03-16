@@ -10,21 +10,135 @@
   </view>
 
   <view class="card">
-    <view class="section-title">最近 35 天</view>
-    <scroll-view class="timeline-scroll" scroll-x enable-flex>
-      <view class="timeline-row">
-        <block wx:for="{{timelineDays}}" wx:key="id">
-          <view class="timeline-day {{item.isRecorded ? 'is-recorded' : ''}} {{item.isPredicted ? 'is-predicted' : ''}} {{item.isToday ? 'is-today' : ''}}">
-            <view class="timeline-month">{{item.monthLabel}}</view>
-            <view class="timeline-number">{{item.dayLabel}}</view>
-          </view>
+    <view class="calendar-heading">
+      <view class="section-title">周期日历</view>
+      <view class="calendar-actions">
+        <button class="calendar-link {{isRangeSelectionMode ? 'calendar-link-active' : ''}}" bindtap="onEnterRangeMode">补录一段</button>
+        <view class="mode-switch">
+          <view class="mode-pill {{calendarMode === 'cycle-window' ? 'mode-pill-active' : ''}}" data-mode="cycle-window" bindtap="onCalendarModeTap">周期窗</view>
+          <view class="mode-pill {{calendarMode === 'month' ? 'mode-pill-active' : ''}}" data-mode="month" bindtap="onCalendarModeTap">月视图</view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{calendarMode === 'cycle-window' && cycleWindow}}" class="calendar-panel">
+      <view class="calendar-toolbar">
+        <button class="mini-nav-btn" data-start-date="{{cycleWindow.previousStartDate}}" bindtap="onCycleWindowStep">上一周</button>
+        <view class="calendar-range">{{cycleWindow.startDate}} - {{cycleWindow.endDate}}</view>
+        <button class="mini-nav-btn" data-start-date="{{cycleWindow.nextStartDate}}" bindtap="onCycleWindowStep">下一周</button>
+      </view>
+
+      <view class="jump-row">
+        <view class="jump-chip" data-target="today" bindtap="onCycleJumpTap">Today</view>
+        <view class="jump-chip" data-target="lastCycle" bindtap="onCycleJumpTap">Last cycle</view>
+        <view class="jump-chip" data-target="nextPrediction" bindtap="onCycleJumpTap">Next prediction</view>
+      </view>
+
+      <view class="weekday-row">
+        <block wx:for="{{weekdayLabels}}" wx:key="*this">
+          <view class="weekday-cell">{{item}}</view>
         </block>
       </view>
-    </scroll-view>
+
+      <block wx:for="{{cycleWindow.weeks}}" wx:key="id" wx:for-item="week">
+        <view class="calendar-week">
+          <block wx:for="{{week.days}}" wx:key="id" wx:for-item="day">
+            <view
+              class="calendar-day {{day.isInSelectedRange ? 'is-selected-range' : ''}} {{day.isSelected ? 'is-selected' : ''}} {{day.isPeriod ? 'is-period' : ''}} {{day.isPredicted ? 'is-predicted' : ''}} {{day.isToday ? 'is-today' : ''}} {{day.periodRole !== 'none' ? 'period-' + day.periodRole : ''}} {{day.predictionRole !== 'none' ? 'prediction-' + day.predictionRole : ''}}"
+              data-date="{{day.date}}"
+              data-record-id="{{day.recordId}}"
+              data-cycle-id="{{day.cycleId}}"
+              bindtap="onCalendarDayTap"
+            >
+              <view class="day-number">{{day.dayLabel}}</view>
+              <view class="day-dot {{day.hasRecord ? 'day-dot-visible' : ''}}"></view>
+            </view>
+          </block>
+        </view>
+      </block>
+    </view>
+
+    <view wx:if="{{calendarMode === 'month' && monthView}}" class="calendar-panel">
+      <view class="calendar-toolbar">
+        <button class="mini-nav-btn" data-month-key="{{monthView.previousMonthKey}}" bindtap="onMonthStep">上个月</button>
+        <view class="calendar-range">{{monthView.monthLabel}}</view>
+        <button class="mini-nav-btn" data-month-key="{{monthView.nextMonthKey}}" bindtap="onMonthStep">下个月</button>
+      </view>
+
+      <view class="weekday-row">
+        <block wx:for="{{weekdayLabels}}" wx:key="*this">
+          <view class="weekday-cell">{{item}}</view>
+        </block>
+      </view>
+
+      <block wx:for="{{monthView.weeks}}" wx:key="id" wx:for-item="week">
+        <view class="calendar-week">
+          <block wx:for="{{week.days}}" wx:key="id" wx:for-item="day">
+            <view
+              class="calendar-day month-day {{day.isInSelectedRange ? 'is-selected-range' : ''}} {{day.isSelected ? 'is-selected' : ''}} {{day.isCurrentMonth ? '' : 'is-outside-month'}} {{day.isPeriod ? 'is-period' : ''}} {{day.isPredicted ? 'is-predicted' : ''}} {{day.isToday ? 'is-today' : ''}} {{day.periodRole !== 'none' ? 'period-' + day.periodRole : ''}} {{day.predictionRole !== 'none' ? 'prediction-' + day.predictionRole : ''}}"
+              data-date="{{day.date}}"
+              data-record-id="{{day.recordId}}"
+              data-cycle-id="{{day.cycleId}}"
+              bindtap="onCalendarDayTap"
+            >
+              <view class="day-number">{{day.dayLabel}}</view>
+              <view class="day-dot {{day.hasRecord ? 'day-dot-visible' : ''}}"></view>
+            </view>
+          </block>
+        </view>
+      </block>
+    </view>
+
     <view class="timeline-legend">
       <view class="legend-item"><text class="legend-dot legend-recorded"></text>已记录</view>
+      <view class="legend-item"><text class="legend-dot legend-period"></text>经期区间</view>
       <view class="legend-item"><text class="legend-dot legend-predicted"></text>预测窗口</view>
       <view class="legend-item"><text class="legend-dot legend-today"></text>今天</view>
+    </view>
+
+    <view class="inline-panel">
+      <view wx:if="{{isRangeSelectionMode}}" class="panel-block">
+        <view class="panel-title">补录一段</view>
+        <view class="panel-copy">先点开始日，再点结束日。选中后直接在首页完成补录。</view>
+        <view class="range-meta">开始：{{rangeSelectionStart || '未选择'}}</view>
+        <view class="range-meta">结束：{{rangeSelectionEnd || '未选择'}}</view>
+        <view class="panel-actions">
+          <button class="panel-btn panel-btn-secondary" bindtap="onRangeCancel">取消</button>
+          <button class="panel-btn panel-btn-primary" bindtap="onRangeSave">保存区间</button>
+        </view>
+      </view>
+
+      <view wx:elif="{{selectedDatePanel}}" class="panel-block">
+        <view class="panel-date">{{selectedDatePanel.selectedDate}}</view>
+        <view class="panel-title">{{selectedDatePanel.title}}</view>
+        <view class="panel-copy">{{selectedDatePanel.description}}</view>
+        <view class="panel-actions">
+          <button
+            class="panel-btn panel-btn-primary"
+            data-action="{{selectedDatePanel.primaryAction.key}}"
+            bindtap="onSelectedPanelAction"
+          >
+            {{selectedDatePanel.primaryAction.label}}
+          </button>
+          <button
+            wx:if="{{selectedDatePanel.secondaryAction}}"
+            class="panel-btn panel-btn-secondary"
+            data-action="{{selectedDatePanel.secondaryAction.key}}"
+            bindtap="onSelectedPanelAction"
+          >
+            {{selectedDatePanel.secondaryAction.label}}
+          </button>
+        </view>
+        <view class="panel-subactions">
+          <view
+            class="panel-link"
+            data-action="{{selectedDatePanel.exceptionAction.key}}"
+            bindtap="onSelectedPanelAction"
+          >
+            {{selectedDatePanel.exceptionAction.label}}
+          </view>
+        </view>
+      </view>
     </view>
   </view>
 

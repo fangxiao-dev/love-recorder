@@ -95,14 +95,25 @@ Show:
 - or "距离上次开始第 X 天"
 - predicted next window as secondary text
 
-**Step 2: Render the rolling 30-45 day timeline**
+**Step 2: Render the homepage calendar**
 
 Display:
+- default Cycle Window (3x7 / 21 days)
+- auxiliary Month View
 - recorded cycle segments
 - today marker
 - predicted window marker
+- selected-day highlight
 
-**Step 3: Add quick actions**
+**Step 3: Add selected-day inline panel**
+
+When a day is tapped:
+- show the selected date status below the calendar
+- if the day has no state, default the main action to "月经来了"
+- if the day falls inside an active inferred period window, show "月经走了：是/否"
+- keep editing on the homepage instead of forcing a detail-page jump
+
+**Step 4: Add quick actions**
 
 Include buttons for:
 - 今天来了
@@ -110,12 +121,18 @@ Include buttons for:
 - 补录一段
 - 记录异常
 
-**Step 4: Verify in DevTools**
+`补录一段` should enter an inline range-backfill mode instead of navigating to a placeholder page.
+
+**Step 5: Verify in DevTools**
 
 Run: preview the page with seeded mock data
-Expected: status and timeline update correctly for active-cycle and non-active-cycle examples
+Expected:
+- Cycle Window and Month View both render correctly
+- tapped day opens inline status editing
+- empty day does not dead-end
+- status updates correctly for active-cycle and non-active-cycle examples
 
-**Step 5: Commit**
+**Step 6: Commit**
 
 ```bash
 git add pages/module-home/index.js pages/module-home/index.wxml pages/module-home/index.wxss app.json
@@ -131,27 +148,44 @@ git commit -m "feat: add status-first menstrual module homepage"
 - Create: `pages/record-range/index.wxml`
 - Create: `pages/record-range/index.wxss`
 
-**Step 1: Implement "今天来了"**
+**Step 1: Implement "今天来了" as cycle start**
 
 When tapped, create a record whose start date is today, then refresh homepage state immediately.
 
-**Step 2: Implement "今天结束了"**
+**Step 2: Implement inferred active period behavior**
 
-When tapped, patch the active record with today's end date, then refresh homepage state immediately.
+After a cycle start is set:
+- treat following dates as "经期中" within the default menstrual-length window
+- default menstrual length to 7 days
+- allow a later settings surface to adjust this duration
 
-**Step 3: Implement "补录一段"**
+**Step 3: Implement "今天结束了" / "月经走了：是"**
 
-Create a range-selection page that lets the user select a continuous historical segment in one action.
+When confirmed on a selected date:
+- set that selected day as the cycle end date
+- close the cycle loop explicitly
+- stop the inferred active period after that day
 
-**Step 4: Verify in DevTools**
+**Step 4: Implement auto-close at default length**
+
+If the user never manually ends the cycle:
+- auto-close on the last day of the default menstrual-length window
+
+**Step 5: Implement "补录一段"**
+
+Implement inline range-selection on the homepage so the user can backfill a continuous historical segment without entering a separate placeholder page.
+
+**Step 6: Verify in DevTools**
 
 Run: test each quick action against mock data
 Expected:
 - start action creates an active cycle
-- end action closes the active cycle
-- backfill creates a historical range
+- inferred active period persists through the default menstrual-length window
+- explicit end action closes the active cycle on the selected day
+- missing manual end still auto-closes at the default length
+- backfill creates a historical range inline
 
-**Step 5: Commit**
+**Step 7: Commit**
 
 ```bash
 git add pages/module-home/index.js services/cycle-record-service.js pages/record-range/index.js pages/record-range/index.wxml pages/record-range/index.wxss
@@ -166,21 +200,29 @@ git commit -m "feat: add quick menstrual recording flows"
 - Create: `pages/record-exception/index.wxss`
 - Modify: `services/cycle-record-service.js`
 
-**Step 1: Build the lightweight abnormal-entry form**
+**Step 1: Build the abnormal-only capture flow**
 
 Support optional fields for:
 - flow level
 - pain level
+- color level
 - notes
+
+These fields should appear only after the user explicitly marks the day as "异常" or "不符合预期".
 
 **Step 2: Keep defaults minimal**
 
-Do not require optional fields to save.
+For normal days:
+- do not require detailed input
+- preserve the default state without forcing extra form choices
 
 **Step 3: Verify save/update behavior**
 
-Run: save entries with empty and filled optional fields
-Expected: both flows succeed and preserve record integrity
+Run: save both "normal" and "abnormal" day states
+Expected:
+- normal flow succeeds with no extra detail
+- abnormal flow can add detail only when needed
+- both flows preserve record integrity
 
 **Step 4: Commit**
 
