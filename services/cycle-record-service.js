@@ -2,6 +2,7 @@ const { FLOW_LEVELS, PAIN_LEVELS } = require('../models/cycle-record');
 const { seedCollections } = require('../mock/seed-data');
 const { STORAGE_KEYS, get, set, loadSeedData } = require('./storage');
 const { DAY_IN_MS, diffDays, formatDate, parseDateString } = require('../utils/date');
+const DEFAULT_MENSTRUAL_DAYS = 7;
 
 class ValidationError extends Error {
   constructor(message) {
@@ -27,6 +28,46 @@ function getAllCycleRecords() {
     saveAllCycleRecords(migrated.records);
   }
   return migrated.records;
+}
+
+function createRecordId(moduleInstanceId, recordDate) {
+  return `${moduleInstanceId}-${recordDate}`;
+}
+
+function buildRecord(moduleInstanceId, recordDate, editorUserId) {
+  const now = new Date().toISOString();
+  return {
+    id: createRecordId(moduleInstanceId, recordDate),
+    moduleInstanceId,
+    recordDate,
+    flowLevel: null,
+    painLevel: null,
+    notes: '',
+    source: 'owner',
+    createdByUserId: editorUserId,
+    lastEditedByUserId: editorUserId,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function saveNewRecords(recordsToCreate) {
+  if (!recordsToCreate.length) {
+    return [];
+  }
+
+  const allRecords = getAllCycleRecords();
+  const existingKeys = new Set(allRecords.map((item) => `${item.moduleInstanceId}:${item.recordDate}`));
+  const deduped = recordsToCreate.filter(
+    (item) => !existingKeys.has(`${item.moduleInstanceId}:${item.recordDate}`)
+  );
+
+  if (!deduped.length) {
+    return [];
+  }
+
+  saveAllCycleRecords([...allRecords, ...deduped]);
+  return deduped;
 }
 
 function saveAllCycleRecords(records) {
@@ -167,6 +208,88 @@ function expandLegacyCycleRecord(record) {
     });
   }
   return expanded;
+}
+
+function validateRange(startDate, endDate) {
+  if (!startDate || !endDate) {
+    throw new ValidationError('开始和结束日期不能为空');
+  }
+
+  if (endDate < startDate) {
+    throw new ValidationError('结束日期不能早于开始日期');
+  }
+}
+
+function validateNotFuture(dateString, today) {
+  if (today && dateString > today) {
+    throw new ValidationError('暂不支持记录未来日期');
+  }
+}
+
+function createCycleRangeRecord(moduleInstanceId, startDate, endDate, editorUserId) {
+  const options = arguments[4] || {};
+  validateRange(startDate, endDate);
+  validateNotFuture(startDate, options.today);
+  validateNotFuture(endDate, options.today);
+
+  const totalDays = diffDays(startDate, endDate);
+  const toCreate = [];
+  for (let index = 0; index <= totalDays; index += 1) {
+    const recordDate = formatDate(new Date(parseDateString(startDate).getTime() + index * DAY_IN_MS));
+    toCreate.push(buildRecord(moduleInstanceId, recordDate, editorUserId));
+  }
+
+  const createdRecords = saveNewRecords(toCreate);
+  return {
+    moduleInstanceId,
+    startDate,
+    endDate,
+    createdDates: createdRecords.map((item) => item.recordDate).sort(),
+  };
+}
+
+function markCycleStart(moduleInstanceId, recordDate, editorUserId) {
+  const options = arguments[3] || {};
+  validateRange(recordDate, recordDate);
+  validateNotFuture(recordDate, options.today);
+  const createdRecords = saveNewRecords([
+    buildRecord(moduleInstanceId, recordDate, editorUserId),
+  ]);
+
+  return createdRecords[0] || listCycleRecordsByModule(moduleInstanceId).find((item) => item.recordDate === recordDate);
+}
+
+function findActiveCycleStart(moduleInstanceId, endDate, defaultMenstrualDays) {
+  const groups = getCycleGroupsByModule(moduleInstanceId)
+    .filter((item) => item.cycleStartDate <= endDate)
+    .sort((left, right) => right.cycleStartDate.localeCompare(left.cycleStartDate));
+  const latest = groups[0];
+  if (!latest) {
+    return null;
+  }
+
+  if (diffDays(latest.cycleStartDate, endDate) > defaultMenstrualDays - 1) {
+    return null;
+  }
+
+  return latest.cycleStartDate;
+}
+
+function markCycleEnd(moduleInstanceId, endDate, editorUserId, options) {
+  const defaultMenstrualDays = options && options.defaultMenstrualDays
+    ? options.defaultMenstrualDays
+    : DEFAULT_MENSTRUAL_DAYS;
+  const cycleStartDate = findActiveCycleStart(moduleInstanceId, endDate, defaultMenstrualDays);
+
+  if (!cycleStartDate) {
+    throw new ValidationError('没有可结束的进行中周期');
+  }
+
+  createCycleRangeRecord(moduleInstanceId, cycleStartDate, endDate, editorUserId);
+
+  return getCycleGroupsByModule(moduleInstanceId).find(
+    (item) => item.cycleStartDate === cycleStartDate
+  );
 }
 
 function getCycleRecordById(recordId) {
@@ -334,8 +457,10 @@ function saveCycleException(moduleInstanceId, input) {
 }
 
 module.exports = {
+  DEFAULT_MENSTRUAL_DAYS,
   ValidationError,
   createCycleRange,
+  createCycleRangeRecord,
   getCycleGroupsByModule,
   getCycleRecordByDate,
   getCycleRecordById,
@@ -344,6 +469,8 @@ module.exports = {
   recordCycleEnd,
   recordCycleStart,
   saveCycleException,
+  markCycleEnd,
+  markCycleStart,
   updateCycleRecord,
   validateRecordPatch,
 };
