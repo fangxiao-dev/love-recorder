@@ -1,6 +1,19 @@
 <view class="page-shell">
   <view class="card">
     <view class="title">{{pageTitle}}</view>
-    <view class="subtitle">{{pageNote}}</view>
+    <view class="subtitle">按周期倒序展示，点击进入周期内每日记录。</view>
+  </view>
+
+  <view wx:if="{{isEmpty}}" class="card empty-card">
+    <view class="title empty-title">还没有历史记录</view>
+    <view class="subtitle">先用“今天来了”或“补录一段”创建记录。</view>
+  </view>
+
+  <view wx:for="{{cycles}}" wx:key="cycleId" class="card list-item" data-cycle-id="{{item.cycleId}}" bindtap="handleCycleTap">
+    <view class="row">
+      <view class="item-title">{{item.cycleStartDate}} - {{item.cycleEndDate}}</view>
+      <view class="item-link">查看详情</view>
+    </view>
+    <view class="meta">共 {{item.dayCount}} 天</view>
   </view>
 </view>

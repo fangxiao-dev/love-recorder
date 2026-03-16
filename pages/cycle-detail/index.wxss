@@ -1,13 +1,5 @@
-.card {
-  background: #fffefc;
-}
-
 .empty-card {
   margin-top: 24rpx;
-}
-
-.empty-title {
-  font-size: 34rpx;
 }
 
 .list-item {
