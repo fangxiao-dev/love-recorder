@@ -1,3 +1,26 @@
 .title {
   color: #2e231c;
 }
+
+.entry-list {
+  margin-top: 28rpx;
+}
+
+.entry-btn {
+  padding: 18rpx 20rpx;
+  border-radius: 16rpx;
+  background: #2e231c;
+  color: #fff7f2;
+  font-size: 28rpx;
+  text-align: center;
+}
+
+.entry-btn + .entry-btn {
+  margin-top: 14rpx;
+}
+
+.entry-btn.secondary {
+  background: #ffffff;
+  color: #2e231c;
+  border: 2rpx solid rgba(194, 131, 105, 0.35);
+}

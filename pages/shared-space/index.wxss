@@ -1,3 +1,29 @@
 .card {
   background: #fffefb;
 }
+
+.invite-note {
+  margin-top: 16rpx;
+  color: #9e8373;
+  font-size: 24rpx;
+  line-height: 1.5;
+}
+
+.module-card {
+  margin-top: 20rpx;
+  padding: 24rpx;
+  border-radius: 20rpx;
+  background: #ffffff;
+  border: 2rpx solid rgba(194, 131, 105, 0.18);
+}
+
+.module-name {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.module-meta {
+  margin-top: 8rpx;
+  color: #7d695e;
+  font-size: 24rpx;
+}
