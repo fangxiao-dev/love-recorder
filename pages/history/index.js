@@ -1,16 +1,27 @@
 const { getCycleGroupsByModule } = require('../../services/cycle-record-service');
 
-const DEFAULT_MODULE_INSTANCE_ID = 'module-shared';
-
 Page({
   data: {
     pageTitle: '历史记录',
-    moduleInstanceId: DEFAULT_MODULE_INSTANCE_ID,
+    moduleInstanceId: '',
     cycles: [],
     isEmpty: false,
   },
 
+  onLoad(query) {
+    this.setData({
+      moduleInstanceId: query.moduleInstanceId || '',
+    });
+  },
+
   onShow() {
+    if (!this.data.moduleInstanceId) {
+      this.setData({
+        cycles: [],
+        isEmpty: true,
+      });
+      return;
+    }
     this.loadRecords();
   },
 

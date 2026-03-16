@@ -12,4 +12,17 @@ Page({
       entryLabel: entry === 'shared-space' ? '共享空间' : '我的模块',
     });
   },
+  goToHistory() {
+    if (!this.data.moduleInstanceId) {
+      wx.showToast({
+        title: '缺少模块实例',
+        icon: 'none',
+      });
+      return;
+    }
+
+    wx.navigateTo({
+      url: `/pages/history/index?moduleInstanceId=${this.data.moduleInstanceId}`,
+    });
+  },
 });

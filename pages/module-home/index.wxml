@@ -4,5 +4,8 @@
     <view class="subtitle">{{pageNote}}</view>
     <view class="meta">入口：{{entryLabel}}</view>
     <view class="meta">模块实例：{{moduleInstanceId}}</view>
+    <view class="action-row">
+      <button class="nav-btn" bindtap="goToHistory">查看历史记录</button>
+    </view>
   </view>
 </view>

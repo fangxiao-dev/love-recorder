@@ -2,6 +2,7 @@
   <view class="card">
     <view class="title">{{pageTitle}}</view>
     <view class="subtitle">按周期倒序展示，点击进入周期内每日记录。</view>
+    <view class="meta">模块实例：{{moduleInstanceId || '未指定'}}</view>
   </view>
 
   <view wx:if="{{isEmpty}}" class="card empty-card">
