@@ -1,5 +1,7 @@
 # love-recorder
 
+![love-recorder preview](docs/preview.png)
+
 `love-recorder` is a native WeChat Mini Program MVP for a relationship-oriented record space.
 The current first module is menstrual tracking, designed to work for a single user first and later be shared into the same module instance with a partner.
 
