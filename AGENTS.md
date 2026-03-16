@@ -34,6 +34,9 @@
   - inspect repo state
   - confirm or refine context if the task changes scope
   - write or update plans before substantial implementation
+  - keep trunk focused on planning, task tracking, and WT-PM closure
+  - enter a dedicated task worktree before implementation
+  - run task-local environment preparation inside that worktree
   - implement in small verifiable slices
   - verify in WeChat DevTools before claiming implementation complete
   - treat WT-PM task completion as a separate closure step after verification
@@ -43,11 +46,14 @@
   - when the task is multi-step, update the relevant design or plan doc first
   - keep plans tied to the current milestone: runnable prototype
   - mark assumptions and open questions explicitly
+  - trunk-side planning should prepare the task context, but should not perform task-local install/setup work
 - Implementation expectations:
   - keep the product centered on a single module instance that may be private or shared
   - avoid framework churn; prefer native mini program structures unless the project context changes
   - preserve the private-to-shared transition model without duplicating module data
   - avoid broadening into future modules unless the user asks
+  - if using Codex app handoff, use it only to create a fresh task worktree; do not use it to switch into a branch that is already owned by another worktree
+  - if a task worktree already exists, open that worktree directly instead of checking out the task branch in trunk
 - Testing expectations:
   - verify behavior in WeChat DevTools before claiming the prototype works
   - prefer simple deterministic test data for cycle-state and timeline logic
@@ -58,6 +64,7 @@
     - implementation complete: code is written and verified in the task worktree
     - task complete: WT-PM closure is finished, including merge-back and status update
   - if work stops before merge-back or `DONE` status, report the exact remaining closure steps instead of saying the task is finished
+  - do not treat trunk as the place to run task-local installs, sync ignored local files, or generate private config; those steps belong to the target worktree
 
 ## Skill Usage
 - Default skills:
