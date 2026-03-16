@@ -1,3 +1,44 @@
 .card {
   background: #fffdfa;
 }
+
+.form-card {
+  margin-top: 24rpx;
+}
+
+.field {
+  margin-bottom: 20rpx;
+}
+
+.label {
+  margin-bottom: 8rpx;
+  font-size: 26rpx;
+  color: #5d5046;
+}
+
+.picker-value {
+  width: 100%;
+  box-sizing: border-box;
+  border: 2rpx solid rgba(194, 131, 105, 0.3);
+  border-radius: 16rpx;
+  padding: 16rpx;
+  font-size: 28rpx;
+  line-height: 1.4;
+  background: #fff;
+  color: #2d2a26;
+  min-height: 44rpx;
+  display: flex;
+  align-items: center;
+}
+
+.error {
+  color: #c0392b;
+  margin-top: 8rpx;
+  margin-bottom: 14rpx;
+  font-size: 25rpx;
+}
+
+.save-button {
+  margin-top: 12rpx;
+  background: #c28369 !important;
+}
